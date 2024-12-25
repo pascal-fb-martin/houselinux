@@ -62,11 +62,26 @@ A metric normally reported with 3 or 4 elements may be reported with 2 elements 
 
 This status information is visible in the Status web page.
 
+```
+GET /metrics/info
+```
+This endpoint returns general information about the server hardware, OS, uptime, etc. They are separate from the metrics because they seldom change and are not performance related. The data is a JSON object, TBD.
+
 ## Implementation
 
-/proc/self/mountinfo is used to retrieve the mounted volumes, and statvfs() is used to get the usage information for each volume.
+The following is currently implemented:
 
-/proc/meminfo is used to retrieve the RAM usage.
+* /proc/self/mountinfo is used to retrieve the mounted volumes, and statvfs() is used to get the usage information for each volume.
 
-/proc/stat and /proc/loadavg will be used to retrieve the CPU usage.
+* /proc/meminfo is used to retrieve the RAM usage.
+
+The following is planned in the near future:
+
+* /proc/stat and /proc/loadavg will be used to retrieve the CPU usage.
+
+* /proc/diskstats will be used to retrieve disk IO metrics, especially latency.
+
+* /proc/net/dev will be used to retrieve network IO traffic number, including error counts.
+
+* /proc/version (kernel version), /etc/os-release (Linux distribution) and /proc/uptime will be used to collect general information about the server (see endpoint /metrics/info).
 
