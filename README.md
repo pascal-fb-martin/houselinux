@@ -16,7 +16,7 @@ The goal of Houselinux is to gather an extensive set of OS metrics, and report t
 * Have a small memory footprint.
 * Generate compact data.
 
-The later is reached by reporting percentile data at low frequency. The most basic percentile data is the set min and max. Slightly more sophisticated is the set min, median, max.
+The later goal leads to a choice of reporting quantile data at low frequency. The most basic quantile data is the set min and max. The min and max values give you and idea of the value fluctuations, but no idea about how the sampled values are spread within the interval. A slightly less basic set is min, median, max. The addition of a median value provides an indication of the values being centered or overall biased toward the min or max. Adding quartiles would give an indication of the values being either concentrated around the median, the min or max, or else evenly spread. Each addition add to the quality of the information, but exponentially increases both the computational and storage cost. The plan is to adjust based on experience. A different quality level might be needed metric by metric.
 
 This service is not intended to have a user interface. The existing web pages are for maintenance and troubleshooting only.
 
@@ -76,6 +76,8 @@ The following is currently implemented:
 * /proc/meminfo is used to retrieve the RAM usage.
 
 The following is planned in the near future:
+
+* Push periodic metrics to detected log services for permanent storage, in the same JSON format as returned by the /metrics/status endpoint.
 
 * /proc/stat and /proc/loadavg will be used to retrieve the CPU usage.
 
