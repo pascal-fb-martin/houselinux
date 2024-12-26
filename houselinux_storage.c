@@ -95,11 +95,13 @@ static long long houselinux_storage_total (const struct statvfs *fs) {
     return (long long)(fs->f_blocks) * fs->f_frsize;
 }
 
+/* NOT USED FOR NOW.
 static int houselinux_storage_used (const struct statvfs *fs) {
 
     long long total = houselinux_storage_total (fs);
     return (int)(((total - houselinux_storage_free(fs)) * 100) / total);
 }
+*/
 
 void houselinux_storage_minimum (long long value, long long *dest) {
     if ((*dest == 0) || (value < *dest)) *dest = value;
@@ -112,7 +114,6 @@ void houselinux_storage_maximum (long long value, long long *dest) {
 
 int houselinux_storage_status (char *buffer, int size) {
 
-    int i;
     int cursor;
     int saved = 0;
     const char *sep = "";
@@ -153,7 +154,7 @@ int houselinux_storage_status (char *buffer, int size) {
         }
 
         cursor += snprintf (buffer+cursor, size-cursor,
-                            "%s\"%s\":{\"size\":[%lld,\"MB\"],"
+                            "%s\"%s\":{\"size\":[%d,\"MB\"],"
                                       "\"free\":[%s,\"MB\"]}",
                             sep, HouseMountPoints[v].mount, size, free_ascii);
         if (cursor >= size) return 0;

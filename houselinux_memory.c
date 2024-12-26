@@ -86,8 +86,6 @@ void houselinux_memory_maximum (long long value, long long *dest) {
 int houselinux_memory_status (char *buffer, int size) {
 
     int cursor = 0;
-    int saved = 0;
-    const char *sep = "";
     long long memtotal = 0;
     long long swaptotal = 0;
 
@@ -121,12 +119,12 @@ int houselinux_memory_status (char *buffer, int size) {
     char mem_ascii[128];
     if (min.memavailable == max.memavailable) {
         snprintf (mem_ascii, sizeof(mem_ascii),
-                  "\"available\":[%lld,\"MB\"],\"used\":[%lld,\"%\"]",
+                  "\"available\":[%lld,\"MB\"],\"used\":[%d,\"%%\"]",
                   min.memavailable,
                   (int)((100 * (memtotal - max.memavailable)) / memtotal));
     } else {
         snprintf (mem_ascii, sizeof(mem_ascii),
-                  "\"available\":[%lld,%lld,\"MB\"],\"used\":[%lld,%lld,\"%\"]",
+                  "\"available\":[%lld,%lld,\"MB\"],\"used\":[%d,%d,\"%%\"]",
                   min.memavailable,
                   max.memavailable,
                   (int)((100 * (memtotal - max.memavailable)) / memtotal),
@@ -135,8 +133,12 @@ int houselinux_memory_status (char *buffer, int size) {
 
     char dirty_ascii[64];
     if (min.memdirty == max.memdirty) {
-        snprintf (dirty_ascii, sizeof(dirty_ascii),
-                  "\"dirty\":[%lld,\"MB\"]", min.memdirty);
+        if (min.memdirty == 0) {
+            dirty_ascii[0] = 0;
+        } else {
+            snprintf (dirty_ascii, sizeof(dirty_ascii),
+                      "\"dirty\":[%lld,\"MB\"]", min.memdirty);
+        }
     } else {
         snprintf (dirty_ascii, sizeof(dirty_ascii),
                   "\"dirty\":[%lld,%lld,\"MB\"]", min.memdirty, max.memdirty);
@@ -177,13 +179,13 @@ static void houselinux_memory_meminfo (struct HouseMemoryMetrics *metrics) {
         char *line = fgets (buffer, sizeof(buffer), f);
         if (!line) break;
 
-        char *sep = strchr (line, ':');
-        if (!sep) continue;
-        *sep = 0;
-
         // This is an accelerator, checking if the first character matches
         // anything of interest. UPDATE THE STRING IF NEW ITEMS ARE RECOVERED.
         if (!strchr ("MSD", line[0])) continue;
+
+        char *sep = strchr (line, ':');
+        if (!sep) continue;
+        *sep = 0;
 
         if (!strncmp (line, "Mem", 3)) {
             if (!strcmp (line+3, "Total")) {

@@ -54,11 +54,15 @@ This endpoint returns a complete set of metrics, as a JSON object defined as fol
 * metrics.cpu: all CPU related metrics (TBD).
 
 an individual metric is an array of 2, 3 or 4 elements:
-* If the array has 2 elements, the format is: value, unit ("GB", "MB", "%", etc.).
+* If the array has 2 elements, the format is: value, unit.
 * If the array has 3 elements, the format is: min, max, unit.
 * If the array has 4 elements, the format is: min, median, max, unit.
 
-A metric normally reported with 3 or 4 elements may be reported with 2 elements when the min and max values are equal.
+The unit is typically "GB", "MB", "TB", "%", etc. It can be null if the metrics has no unit, e.g. a counter. The null unit must be present but integer 0 is accepted as equivalent to null: "[12345,null]" and [12345,0]" are equivalent.
+
+A metric normally reported with 3 or 4 elements may be reported with 2 elements when the min and max values are equal, or not reported at all if the min and max are both 0 (any missing metrics must be considered 0).
+
+The unit used for a given metrics may change from machine to machine, and from time to time. It is legal to change the unit to make the data more compact. The precision of most metrics must be at least 3 digits (2 digits for percentages). Adjusting the unit may make the data more compact. For example, 10240 MB can be reported as 10.0 GB.
 
 This status information is visible in the Status web page.
 
@@ -75,9 +79,9 @@ The following is currently implemented:
 
 * /proc/meminfo is used to retrieve the RAM usage.
 
-The following is planned in the near future:
+* Metrics are periodically pushed to all detected log services for permanent storage, in the same JSON format as returned by the /metrics/status endpoint.
 
-* Push periodic metrics to detected log services for permanent storage, in the same JSON format as returned by the /metrics/status endpoint.
+The following is planned in the near future:
 
 * /proc/stat and /proc/loadavg will be used to retrieve the CPU usage.
 

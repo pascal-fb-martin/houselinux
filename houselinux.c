@@ -47,6 +47,7 @@
 #include "houseportalclient.h"
 #include "housediscover.h"
 #include "houselog.h"
+#include "houselog_storage.h"
 
 #include "houselinux_memory.h"
 #include "houselinux_storage.h"
@@ -62,22 +63,26 @@ static const char *houselinux_status (const char *method, const char *uri,
     time_t now = time(0);
 
     cursor += snprintf (buffer, sizeof(buffer),
-                        "{\"host\":\"%s\",\"proxy\":\"%s\","
+                        "{\"host\":\"%s\","
                             "\"timestamp\":%lld,\"metrics\":{\"period\":300,",
-                        HostName, houseportal_server(), (long long)now);
+                        HostName, (long long)now);
 
     cursor += houselinux_memory_status (buffer+cursor, sizeof(buffer)-cursor);
     cursor += snprintf (buffer+cursor, sizeof(buffer)-cursor, ",");
     cursor += houselinux_storage_status (buffer+cursor, sizeof(buffer)-cursor);
     cursor += snprintf (buffer+cursor, sizeof(buffer)-cursor, "}}");
-    echttp_content_type_json ();
+    if (uri) echttp_content_type_json ();
     return buffer;
 }
 
 static void houselinux_background (int fd, int mode) {
 
-    static time_t LastRenewal = 0;
+    static time_t LastCall = 0;
     time_t now = time(0);
+    if (LastCall >= now) return; // Run only once per second.
+    LastCall = now;
+
+    static time_t LastRenewal = 0;
 
     if (use_houseportal) {
         static const char *path[] = {"metrics:/metrics"};
@@ -89,6 +94,18 @@ static void houselinux_background (int fd, int mode) {
             LastRenewal = now;
         }
     }
+
+    static time_t NextMetricsStore = 0;
+    if (now >= NextMetricsStore) {
+        if (NextMetricsStore == 0) {
+            NextMetricsStore = now + 300;
+        } else {
+            NextMetricsStore += 300;
+            const char *data = houselinux_status (0, 0, 0, 0);
+            if (data) houselog_storage_flush ("metrics", data);
+        }
+    }
+
     houselinux_memory_background(now);
     houselinux_storage_background(now);
 
@@ -101,8 +118,6 @@ static void houselinux_protect (const char *method, const char *uri) {
 }
 
 int main (int argc, const char **argv) {
-
-    const char *error;
 
     // These strange statements are to make sure that fds 0 to 2 are
     // reserved, since this application might output some errors.
