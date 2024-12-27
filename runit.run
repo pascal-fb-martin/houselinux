@@ -1,0 +1,10 @@
+#!/bin/sh
+OPTS=
+HTTPOPTS=
+HOUSEOPTS=
+OTHEROPTS=
+if [ -e /etc/default/housegeneric ] ; then . /etc/default/housegeneric ; fi
+if [ -e /etc/default/houselinux ] ; then . /etc/default/houselinux ; fi
+sv start houseportal || exit 1
+exec /usr/local/bin/houselinux $HTTPOPTS $HOUSEOPTS $OTHEROPTS $OPTS
+
