@@ -98,7 +98,10 @@ static void houselinux_background (int fd, int mode) {
     static time_t NextMetricsStore = 0;
     if (now >= NextMetricsStore) {
         if (NextMetricsStore == 0) {
-            NextMetricsStore = now + 300;
+            // Synchronize recordings at the 5 minutes mark, so that
+            // all machines submit their metrics in a synchronized fashion.
+            // (Don't send a recording before having collected a full set.)
+            NextMetricsStore = now - (now % 300) + 600;
         } else {
             NextMetricsStore += 300;
             const char *data = houselinux_status (0, 0, 0, 0);
