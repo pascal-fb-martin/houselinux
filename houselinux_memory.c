@@ -119,12 +119,12 @@ int houselinux_memory_status (char *buffer, int size) {
     char mem_ascii[128];
     if (min.memavailable == max.memavailable) {
         snprintf (mem_ascii, sizeof(mem_ascii),
-                  "\"available\":[%lld,\"MB\"],\"used\":[%d,\"%%\"]",
+                  ",\"available\":[%lld,\"MB\"],\"used\":[%d,\"%%\"]",
                   min.memavailable,
                   (int)((100 * (memtotal - max.memavailable)) / memtotal));
     } else {
         snprintf (mem_ascii, sizeof(mem_ascii),
-                  "\"available\":[%lld,%lld,\"MB\"],\"used\":[%d,%d,\"%%\"]",
+                  ",\"available\":[%lld,%lld,\"MB\"],\"used\":[%d,%d,\"%%\"]",
                   min.memavailable,
                   max.memavailable,
                   (int)((100 * (memtotal - max.memavailable)) / memtotal),
@@ -137,11 +137,11 @@ int houselinux_memory_status (char *buffer, int size) {
             dirty_ascii[0] = 0;
         } else {
             snprintf (dirty_ascii, sizeof(dirty_ascii),
-                      "\"dirty\":[%lld,\"MB\"]", min.memdirty);
+                      ",\"dirty\":[%lld,\"MB\"]", min.memdirty);
         }
     } else {
         snprintf (dirty_ascii, sizeof(dirty_ascii),
-                  "\"dirty\":[%lld,%lld,\"MB\"]", min.memdirty, max.memdirty);
+                  ",\"dirty\":[%lld,%lld,\"MB\"]", min.memdirty, max.memdirty);
     }
 
     char swap_ascii[128];
@@ -149,17 +149,17 @@ int houselinux_memory_status (char *buffer, int size) {
         swap_ascii[0] = 0;
     } else if (min.swapfree == max.swapfree) {
         snprintf (swap_ascii, sizeof(swap_ascii),
-                  "\"swap\":[%lld,\"MB\"],\"swapped\":[%lld,\"MB\"]",
+                  ",\"swap\":[%lld,\"MB\"],\"swapped\":[%lld,\"MB\"]",
                   swaptotal, swaptotal - max.swapfree);
     } else {
         snprintf (swap_ascii, sizeof(swap_ascii),
-                  "\"swap\":[%lld,\"MB\"],\"swapped\":[%lld,%lld,\"MB\"]",
+                  ",\"swap\":[%lld,\"MB\"],\"swapped\":[%lld,%lld,\"MB\"]",
                   swaptotal,
                   swaptotal - max.swapfree, swaptotal - min.swapfree);
     }
 
     cursor = snprintf (buffer, size,
-                       "\"memory\":{\"ram\":[%lld,\"MB\"],%s,%s,%s}",
+                       "\"memory\":{\"size\":[%lld,\"MB\"]%s%s%s}",
                       memtotal, mem_ascii, dirty_ascii, swap_ascii);
     if (cursor >= size) return 0;
     return cursor;

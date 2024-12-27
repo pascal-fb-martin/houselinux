@@ -42,7 +42,7 @@ This endpoint returns a complete set of metrics, as a JSON object defined as fol
 * timestamp: the time of the request/response.
 * metrics.period: the sampling period used by this service. The client should poll periodically using this value.
 * metrics.memory: all RAM-related metrics (see below)
-* metrics.memory.ram: total amount of RAM the system can use.
+* metrics.memory.size: total amount of RAM the system can use.
 * metrics.memory.available: amount of RAM currently available (i.e. not "used").
 * metrics.memory.used: amount of RAM currently used.
 * metrics.memory.dirty: amount of RAM currently dirty (queued to be saved to disk).

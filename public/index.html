@@ -1,0 +1,181 @@
+<html>
+<head>
+<link rel=stylesheet type="text/css" href="/house.css" title="House">
+<script language="javascript" type="text/javascript">
+
+function friendlyTime (timestamp) {
+
+    var datetime = new Date(timestamp * 1000);
+    datetime = datetime.toLocaleString();;
+    var index = datetime.indexOf(" GMT");
+    if (index > 0) datetime = datetime.substr(0, index);
+    return datetime;
+}
+
+function showQuantile (data) {
+    if (!data) {
+        return "0";
+    }
+    if (data.length == 2) {
+        return data[0] + ' ' + data[1];
+    }
+    if (data.length == 3) {
+        if (data[0] == data[1]) return data[0] + ' ' + data[2];
+        return data[0] + '/' + data[1] + ' ' + data[2];
+    }
+    if (data.length == 4) {
+        if (data[0] == data[2]) return data[0] + ' ' + data[3];
+        return data[0] + '/' + data[1] + '/' + data[2] + ' ' + data[3];
+    }
+    return '(invalid)';
+}
+
+function revertQuantile (data, base) {
+    var result = [...data];
+    if (data.length == 2) {
+        result[0] = base - result[0];
+    } else if (data.length == 3) {
+        result[0] = base - data[1];
+        result[1] = base - data[0];
+    } else if (data.length == 4) {
+        result[0] = base - data[2];
+        result[1] = base - data[1];
+        result[2] = base - data[0];
+    }
+    return result;
+}
+
+function listStorage (data) {
+   var table = document.getElementsByClassName ('storage')[0];
+
+   for (var i = table.childNodes.length - 1; i > 1; i--) {
+       table.removeChild(table.childNodes[i]);
+   }
+   for (var name in data.metrics.storage) {
+      var line = document.createElement("tr");
+      var volume = data.metrics.storage[name];
+
+      var column = document.createElement("td");
+      column.innerHTML = name;
+      line.appendChild(column);
+
+      column = document.createElement("td");
+      column.innerHTML = showQuantile(volume.size);
+      line.appendChild(column);
+
+      column = document.createElement("td");
+      column.innerHTML = showQuantile(revertQuantile(volume.free, volume.size[0]));
+      line.appendChild(column);
+
+      column = document.createElement("td");
+      column.innerHTML = showQuantile(volume.free);
+      line.appendChild(column);
+
+      table.appendChild(line);
+   }
+}
+
+function listMemory (data) {
+   var table = document.getElementsByClassName ('memory')[0];
+
+   for (var i = table.childNodes.length - 1; i > 1; i--) {
+       table.removeChild(table.childNodes[i]);
+   }
+   var line = document.createElement("tr");
+   var memory = data.metrics.memory;
+
+   var column = document.createElement("td");
+   column.innerHTML = showQuantile(memory.size);
+   line.appendChild(column);
+
+   column = document.createElement("td");
+   column.innerHTML = showQuantile(memory.available);
+   line.appendChild(column);
+
+   column = document.createElement("td");
+   column.innerHTML = showQuantile(memory.used);
+   line.appendChild(column);
+
+   column = document.createElement("td");
+   column.innerHTML = showQuantile(memory.dirty);
+   line.appendChild(column);
+
+   column = document.createElement("td");
+   column.innerHTML = showQuantile(memory.swap);
+   line.appendChild(column);
+
+   column = document.createElement("td");
+   column.innerHTML = showQuantile(memory.swapped);
+   line.appendChild(column);
+
+   table.appendChild(line);
+}
+
+function showAll (data) {
+   var title = data.host+' - Linux Status';
+   document.getElementsByTagName ('title')[0].innerHTML = title;
+   listMemory(data);
+   listStorage(data);
+}
+
+function refreshMotion () {
+   var command = new XMLHttpRequest();
+   command.open("GET", "/metrics/status");
+   command.onreadystatechange = function () {
+      if (command.readyState === 4 && command.status === 200) {
+         var type = command.getResponseHeader("Content-Type");
+         showAll((JSON.parse(command.responseText)));
+      }
+   }
+   command.send(null);
+}
+
+window.onload = function() {
+    refreshMotion ();
+    setInterval (refreshMotion, 5000);
+};
+</script>
+<title>CCTV Status</title>
+</head>
+<body>
+   <table class="housetopcontainer">
+   <tr><td>
+   <table class="housetop">
+   <tr>
+   <td><span>Status</span></td>
+   <td><a href="/metrics/events.html">Events</a></td>
+   </tr>
+   </table>
+   </td></tr>
+   </table>
+   <center>
+   <p>
+   <h1>Memory</h1>
+   <table class="housewidetable memory" border="0">
+      <tr>
+         <th width="20%">TOTAL</th>
+         <th width="20%">AVAILABLE</th>
+         <th width="20%">USED</th>
+         <th width="10%">DIRTY</th>
+         <th width="10%">SWAP</th>
+         <th width="20%">SWAPPED</th>
+      </tr>
+   </table>
+   </p>
+   <br>
+   <br>
+   <p>
+   <h1>Storage</h1>
+   <table class="housewidetable storage" border="0">
+      <tr>
+         <th width="40%">VOLUME</th>
+         <th width="20%">SIZE</th>
+         <th width="20%">USED</th>
+         <th width="20%">AVAILABLE</th>
+      </tr>
+   </table>
+   </p>
+   </center>
+</body>
+</html>
+
