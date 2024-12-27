@@ -23,7 +23,7 @@ SHARE=$(HROOT)/share/house
 
 # Application build. --------------------------------------------
 
-OBJS= houselinux_storage.o houselinux_memory.o houselinux.o
+OBJS= houselinux_storage.o houselinux_memory.o houselinux_reduce.o houselinux.o
 LIBOJS=
 
 all: houselinux

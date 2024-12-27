@@ -44,7 +44,6 @@ This endpoint returns a complete set of metrics, as a JSON object defined as fol
 * metrics.memory: all RAM-related metrics (see below)
 * metrics.memory.size: total amount of RAM the system can use.
 * metrics.memory.available: amount of RAM currently available (i.e. not "used").
-* metrics.memory.used: amount of RAM currently used.
 * metrics.memory.dirty: amount of RAM currently dirty (queued to be saved to disk).
 * metrics.memory.swap: size of the swap area (in storage).
 * metrics.memory.swapped: amount of swap current used.

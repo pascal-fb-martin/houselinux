@@ -107,11 +107,11 @@ function listMemory (data) {
    line.appendChild(column);
 
    column = document.createElement("td");
-   column.innerHTML = showQuantile(memory.available);
+   column.innerHTML = showQuantile(toPercentage(revertQuantile(memory.available, memory.size[0]), memory.size[0]));
    line.appendChild(column);
 
    column = document.createElement("td");
-   column.innerHTML = showQuantile(memory.used);
+   column.innerHTML = showQuantile(memory.available);
    line.appendChild(column);
 
    column = document.createElement("td");
@@ -171,10 +171,10 @@ window.onload = function() {
    <h1>Memory</h1>
    <table class="housewidetable memory" border="0">
       <tr>
-         <th width="20%">TOTAL</th>
-         <th width="20%">AVAILABLE</th>
+         <th width="10%">SIZE</th>
          <th width="20%">USED</th>
-         <th width="10%">DIRTY</th>
+         <th width="20%">AVAILABLE</th>
+         <th width="20%">DIRTY</th>
          <th width="10%">SWAP</th>
          <th width="20%">SWAPPED</th>
       </tr>

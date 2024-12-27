@@ -51,6 +51,7 @@
 #include <echttp_static.h>
 
 #include "houselog.h"
+#include "houselinux_reduce.h"
 #include "houselinux_storage.h"
 
 #define DEBUG if (echttp_isdebug()) printf
@@ -61,9 +62,9 @@
 
 
 struct HouseMountMetrics {
-    time_t timestamp;
+    time_t timestamp[HOUSE_MOUNT_SPAN];
     long long size;
-    long long free;
+    long long free[HOUSE_MOUNT_SPAN];
 };
 
 struct HouseMountPoint {
@@ -71,7 +72,7 @@ struct HouseMountPoint {
     char *dev;
     char *mount;
     char *fs;
-    struct HouseMountMetrics metrics[HOUSE_MOUNT_SPAN];
+    struct HouseMountMetrics metrics;
 };
 
 static struct HouseMountPoint HouseMountPoints[HOUSE_MOUNT_MAX];
@@ -86,6 +87,9 @@ void houselinux_storage_initialize (int argc, const char **argv) {
 // follows the documentation in "man statvfs".
 // The problem is compounded by these sizes being the same value for ext4,
 // making it difficult to notice mistakes..
+// Note that this code considers f_bavail and not f_bfree: this is because
+// the intent is to show how much is left for regular applications usage.
+// The reserve for privileged users is not something that one expects using.
 //
 static long long houselinux_storage_free (const struct statvfs *fs) {
     return (long long)(fs->f_bavail) * fs->f_bsize;
@@ -95,27 +99,10 @@ static long long houselinux_storage_total (const struct statvfs *fs) {
     return (long long)(fs->f_blocks) * fs->f_frsize;
 }
 
-/* NOT USED FOR NOW.
-static int houselinux_storage_used (const struct statvfs *fs) {
-
-    long long total = houselinux_storage_total (fs);
-    return (int)(((total - houselinux_storage_free(fs)) * 100) / total);
-}
-*/
-
-void houselinux_storage_minimum (long long value, long long *dest) {
-    if ((*dest == 0) || (value < *dest)) *dest = value;
-}
-
-void houselinux_storage_maximum (long long value, long long *dest) {
-    if (value > *dest) *dest = value;
-}
-
-
 int houselinux_storage_status (char *buffer, int size) {
 
     int cursor;
-    int saved = 0;
+    int saved = 0; // On buffer overflow stop at the last complete volume.
     const char *sep = "";
 
     cursor = snprintf (buffer, size, "%s", "\"storage\":{");
@@ -127,37 +114,22 @@ int houselinux_storage_status (char *buffer, int size) {
 
         if (! HouseMountPoints[v].detected) continue;
 
-        struct HouseMountMetrics *metrics = HouseMountPoints[v].metrics;
+        struct HouseMountMetrics *metrics = &(HouseMountPoints[v].metrics);
 
-        struct HouseMountMetrics min = {0, 0, 0};
-        struct HouseMountMetrics max = {0, 0, 0};
-        int size = 0;
-
-        int n;
-        int i = (time(0) / HOUSE_MOUNT_PERIOD) % HOUSE_MOUNT_SPAN;
-        for (n = HOUSE_MOUNT_SPAN; n > 0; --n) {
-            if (++i >= HOUSE_MOUNT_SPAN) i = 0;
-            if (! metrics[i].timestamp) continue;
-
-            houselinux_storage_minimum (metrics[i].free, &(min.free));
-            houselinux_storage_maximum (metrics[i].free, &(max.free));
-            if (size == 0) size = metrics[i].size;
-        }
-        if (size == 0) continue; // Do not report pseudo FS without storage.
-
-        char free_ascii[32];
-        if (min.free == max.free) {
-            snprintf (free_ascii, sizeof(free_ascii), "%lld", min.free);
-        } else {
-            snprintf (free_ascii, sizeof(free_ascii),
-                      "%lld,%lld", min.free, max.free);
-        }
+        if (metrics->size == 0) continue; // Ignore pseudo FS without storage.
 
         cursor += snprintf (buffer+cursor, size-cursor,
-                            "%s\"%s\":{\"size\":[%d,\"MB\"],"
-                                      "\"free\":[%s,\"MB\"]}",
-                            sep, HouseMountPoints[v].mount, size, free_ascii);
-        if (cursor >= size) return 0;
+                            "%s\"%s\":{\"size\":[%lld,\"MB\"]",
+                            sep, HouseMountPoints[v].mount, metrics->size);
+        if (cursor >= size) break;
+
+        cursor += houselinux_reduce_json (buffer+cursor, size-cursor,
+                                          "free",
+                                          metrics->free,
+                                          HOUSE_MOUNT_SPAN, "MB");
+
+        cursor += snprintf (buffer+cursor, size-cursor, "}");
+        if (cursor >= size) break;
         saved = cursor;
         sep = ",";
     }
@@ -208,7 +180,7 @@ static void houselinux_storage_register_mount
    if (changed) {
        int j;
        for (j = HOUSE_MOUNT_SPAN-1; j >= 0; --j)
-           HouseMountPoints[i].metrics[j].timestamp = 0;
+           HouseMountPoints[i].metrics.timestamp[j] = 0;
    }
 }
 
@@ -312,10 +284,10 @@ void houselinux_storage_background (time_t now) {
         struct statvfs storage;
         if (statvfs (HouseMountPoints[i].mount, &storage)) continue ;
 
-        struct HouseMountMetrics *metrics = HouseMountPoints[i].metrics + index;
+        struct HouseMountMetrics *metrics = &(HouseMountPoints[i].metrics);
         metrics->size = houselinux_storage_total (&storage) / (1024 * 1024);
-        metrics->free = houselinux_storage_free (&storage) / (1024 * 1024);
-        metrics->timestamp = now;
+        metrics->free[index] = houselinux_storage_free (&storage) / (1024 * 1024);
+        metrics->timestamp[index] = now;
     }
 }
 
