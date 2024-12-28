@@ -137,37 +137,38 @@ static void houselinux_memory_meminfo (struct HouseMemoryMetrics *latest, int in
         char *line = fgets (buffer, sizeof(buffer), f);
         if (!line) break;
 
-        // This is an accelerator, checking if the first character matches
-        // anything of interest. UPDATE THE STRING IF NEW ITEMS ARE RECOVERED.
-        if (!strchr ("MSD", line[0])) continue;
+        // This is an accelerator, checking if the 2nd character matches
+        // anything of interest. UPDATE THE STRINGS IF NEW ITEMS ARE RECOVERED.
+        // This check eliminates 40 of the 55 lines.
+        // Check the 2nd character since it has less matches than the 1st.
+        // (The code checks the first character anyway--see later.)
+        if (!strchr ("ewi", line[1])) continue;
 
         char *sep = strchr (line, ':');
         if (!sep) continue;
-        *sep = 0;
+        *(sep++) = 0;
 
-        if (!strncmp (line, "Mem", 3)) {
-            if (!strcmp (line+3, "Total")) {
-                latest->memtotal = atoll (sep+1) / 1024; // kB to MB unit.
-                continue;
-            }
-            if (!strcmp (line+3, "Available")) {
+        if (line[0] == 'M') {
+            if (!strcmp (line, "MemTotal")) {
+                latest->memtotal = atoll (sep) / 1024; // kB to MB unit.
+            } else if (!strcmp (line, "MemAvailable")) {
                 latest->memavailable[index] =
-                    atoll (sep+1) / 1024; // kB to MB unit.
-                continue;
+                    atoll (sep) / 1024; // kB to MB unit.
             }
+            continue;
         }
-        if (!strncmp (line, "Swap", 4)) {
-            if (!strcmp (line+4, "Total")) {
-                latest->swaptotal = atoll (sep+1) / 1024; // kB to MB unit.
-                continue;
+        if (line[0] == 'S') {
+            if (!strcmp (line, "SwapTotal")) {
+                latest->swaptotal = atoll (sep) / 1024; // kB to MB unit.
+            } else if (!strcmp (line, "SwapFree")) {
+                swapfree = atoll (sep) / 1024; // kB to MB unit.
             }
-            if (!strcmp (line+4, "Free")) {
-                swapfree = atoll (sep+1) / 1024; // kB to MB unit.
-                continue;
-            }
+            continue;
         }
-        if (!strcmp (line, "Dirty")) {
-            latest->memdirty[index] = atoll (sep+1) / 1024; // kB to MB unit.
+        if (line[3] == 't') { // 4th Character has a lot less matches.
+            if (!strcmp (line, "Dirty")) {
+                latest->memdirty[index] = atoll (sep) / 1024; // kB to MB unit.
+            }
             continue;
         }
     }
