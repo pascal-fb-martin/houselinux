@@ -46,13 +46,14 @@
 #include "houselinux_reduce.h"
 #include "houselinux_cpu.h"
 
-#define HOUSE_CPU_PERIOD 10 // Sample CPU metrics every 10 seconds.
-#define HOUSE_CPU_SPAN   30 // MUST KEEP A 5 MINUTES HISTORY.
+#define HOUSE_CPU_PERIOD  5 // Sample CPU metrics every 5 seconds.
+#define HOUSE_CPU_SPAN   60 // MUST KEEP A 5 MINUTES HISTORY.
 
 struct HouseCpuMetrics {
     time_t timestamp[HOUSE_CPU_SPAN];
     long long busy[HOUSE_CPU_SPAN];
     long long iowait[HOUSE_CPU_SPAN];
+    long long steal[HOUSE_CPU_SPAN];
 };
 
 static struct HouseCpuMetrics HouseCpuLatest;
@@ -79,6 +80,12 @@ int houselinux_cpu_status (char *buffer, int size) {
     cursor += houselinux_reduce_json (buffer+cursor, size-cursor,
                                       "iowait",
                                       HouseCpuLatest.iowait,
+                                      HOUSE_CPU_SPAN, "%");
+    if (cursor >= size) return 0;
+
+    cursor += houselinux_reduce_json (buffer+cursor, size-cursor,
+                                      "steal",
+                                      HouseCpuLatest.steal,
                                       HOUSE_CPU_SPAN, "%");
     if (cursor >= size) return 0;
     if (cursor <= start) return 0; // No data to report.
@@ -150,10 +157,12 @@ static void houselinux_cpu_stat (struct HouseCpuMetrics *latest, int index) {
                 latest->busy[index] = 0;
                 latest->iowait[index] = 0;
             } else {
+                long long steal = value[7] - Previous[7];
                 long long iowait = value[4] - Previous[4];
                 long long idle = (value[3] - Previous[3]) + iowait;
                 latest->busy[index] = (100 * (total - idle)) / total;
                 latest->iowait[index] = (100 * iowait) / total;
+                latest->steal[index] = (100 * steal) / total;
             }
         }
         memcpy (Previous, value, sizeof(Previous)); // Baseline for next time.
