@@ -49,6 +49,7 @@
 #include "houselog.h"
 #include "houselog_storage.h"
 
+#include "houselinux_cpu.h"
 #include "houselinux_memory.h"
 #include "houselinux_storage.h"
 
@@ -59,16 +60,16 @@ static char HostName[256];
 static const char *houselinux_status (const char *method, const char *uri,
                                       const char *data, int length) {
     static char buffer[65537];
-    int cursor = 0;
+    int cursor;
     time_t now = time(0);
 
-    cursor += snprintf (buffer, sizeof(buffer),
-                        "{\"host\":\"%s\","
-                            "\"timestamp\":%lld,\"metrics\":{\"period\":300,",
-                        HostName, (long long)now);
+    cursor = snprintf (buffer, sizeof(buffer),
+                       "{\"host\":\"%s\","
+                           "\"timestamp\":%lld,\"metrics\":{\"period\":300",
+                       HostName, (long long)now);
 
+    cursor += houselinux_cpu_status (buffer+cursor, sizeof(buffer)-cursor);
     cursor += houselinux_memory_status (buffer+cursor, sizeof(buffer)-cursor);
-    cursor += snprintf (buffer+cursor, sizeof(buffer)-cursor, ",");
     cursor += houselinux_storage_status (buffer+cursor, sizeof(buffer)-cursor);
     cursor += snprintf (buffer+cursor, sizeof(buffer)-cursor, "}}");
     if (uri) echttp_content_type_json ();
@@ -109,6 +110,7 @@ static void houselinux_background (int fd, int mode) {
         }
     }
 
+    houselinux_cpu_background(now);
     houselinux_memory_background(now);
     houselinux_storage_background(now);
 
@@ -146,6 +148,7 @@ int main (int argc, const char **argv) {
     echttp_cors_allow_method("GET");
     echttp_protect (0, houselinux_protect);
 
+    houselinux_cpu_initialize (argc, argv);
     houselinux_memory_initialize (argc, argv);
     houselinux_storage_initialize (argc, argv);
 

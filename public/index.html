@@ -63,6 +63,28 @@ function toPercentage (data, base) {
     return result;
 }
 
+function listCPU (data) {
+   var table = document.getElementsByClassName ('cpu')[0];
+
+   for (var i = table.childNodes.length - 1; i > 1; i--) {
+       table.removeChild(table.childNodes[i]);
+   }
+
+   var line = document.createElement("tr");
+   var cpu = data.metrics.cpu;
+   if (!cpu) return;
+
+   column = document.createElement("td");
+   column.innerHTML = showQuantile(cpu.busy);
+   line.appendChild(column);
+
+   column = document.createElement("td");
+   column.innerHTML = showQuantile(cpu.iowait);
+   line.appendChild(column);
+
+   table.appendChild(line);
+}
+
 function listStorage (data) {
    var table = document.getElementsByClassName ('storage')[0];
 
@@ -132,6 +154,7 @@ function listMemory (data) {
 function showAll (data) {
    var title = data.host+' - Linux Status';
    document.getElementsByTagName ('title')[0].innerHTML = title;
+   listCPU(data);
    listMemory(data);
    listStorage(data);
 }
@@ -167,6 +190,17 @@ window.onload = function() {
    </td></tr>
    </table>
    <center>
+   <p>
+   <h1>CPU</h1>
+   <table class="housewidetable cpu" border="0">
+      <tr>
+         <th width="50%">BUSY</th>
+         <th width="50%">IO WAIT</th>
+      </tr>
+   </table>
+   </p>
+   <br>
+   <br>
    <p>
    <h1>Memory</h1>
    <table class="housewidetable memory" border="0">

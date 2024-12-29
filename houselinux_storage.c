@@ -28,7 +28,7 @@
  *
  * void houselinux_storage_background (time_t now);
  *
- *    The periodic function that manages the video storage.
+ *    The periodic function that manages the metrics collection.
  *
  * int houselinux_storage_status (char *buffer, int size);
  *
@@ -105,7 +105,7 @@ int houselinux_storage_status (char *buffer, int size) {
     int saved = 0; // On buffer overflow stop at the last complete volume.
     const char *sep = "";
 
-    cursor = snprintf (buffer, size, "%s", "\"storage\":{");
+    cursor = snprintf (buffer, size, "%s", ",\"storage\":{");
     if (cursor >= size) return 0;
 
     saved = cursor;

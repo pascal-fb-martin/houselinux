@@ -28,7 +28,7 @@
  *
  * void houselinux_memory_background (time_t now);
  *
- *    The periodic function that manages the collect of metrics.
+ *    The periodic function that manages the metrics collection.
  *
  * int houselinux_memory_status (char *buffer, int size);
  *
@@ -89,7 +89,7 @@ int houselinux_memory_status (char *buffer, int size) {
     int cursor = 0;
 
     cursor = snprintf (buffer, size,
-                       "\"memory\":{\"size\":[%lld,\"MB\"]",
+                       ",\"memory\":{\"size\":[%lld,\"MB\"]",
                        HouseMemoryLatest.memtotal);
     if (cursor >= size) return 0;
 
