@@ -78,11 +78,13 @@ The following is currently implemented:
 
 * /proc/meminfo is used to retrieve the RAM usage.
 
+* /proc/stat is used to retrieve the CPU usage.
+
 * Metrics are periodically pushed to all detected log services for permanent storage, in the same JSON format as returned by the /metrics/status endpoint.
 
 The following is planned in the near future:
 
-* /proc/stat and /proc/loadavg will be used to retrieve the CPU usage.
+* /proc/loadavr will be used to retrieve system load estimates.
 
 * /proc/diskstats will be used to retrieve disk IO metrics, especially latency.
 

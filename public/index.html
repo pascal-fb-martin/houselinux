@@ -156,7 +156,7 @@ function listMemory (data) {
 }
 
 function showAll (data) {
-   var title = data.host+' - Linux Status';
+   var title = data.host+' - Metrics';
    document.getElementsByTagName ('title')[0].innerHTML = title;
    listCPU(data);
    listMemory(data);
@@ -180,7 +180,7 @@ window.onload = function() {
     setInterval (refreshMotion, 5000);
 };
 </script>
-<title>CCTV Status</title>
+<title>Metrics</title>
 </head>
 <body>
    <table class="housetopcontainer">
