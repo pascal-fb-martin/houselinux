@@ -26,6 +26,7 @@ SHARE=$(HROOT)/share/house
 OBJS= houselinux_storage.o \
       houselinux_memory.o \
       houselinux_cpu.o \
+      houselinux_diskio.o \
       houselinux_reduce.o \
       houselinux.o
 LIBOJS=

@@ -102,6 +102,8 @@ function listStorage (data) {
    for (var i = table.childNodes.length - 1; i > 1; i--) {
        table.removeChild(table.childNodes[i]);
    }
+   if (! data.metrics.storage) return;
+
    for (var name in data.metrics.storage) {
       var line = document.createElement("tr");
       var volume = data.metrics.storage[name];
@@ -162,6 +164,42 @@ function listMemory (data) {
    table.appendChild(line);
 }
 
+function listDiskIO (data) {
+   var table = document.getElementsByClassName ('diskio')[0];
+
+   for (var i = table.childNodes.length - 1; i > 1; i--) {
+       table.removeChild(table.childNodes[i]);
+   }
+   if (! data.metrics.disk) return;
+
+   for (var name in data.metrics.disk) {
+      var line = document.createElement("tr");
+      var volume = data.metrics.disk[name];
+
+      var column = document.createElement("td");
+      column.innerHTML = name;
+      line.appendChild(column);
+
+      column = document.createElement("td");
+      column.innerHTML = showQuantile(volume.rdrate);
+      line.appendChild(column);
+
+      column = document.createElement("td");
+      column.innerHTML = showQuantile(volume.rdwait);
+      line.appendChild(column);
+
+      column = document.createElement("td");
+      column.innerHTML = showQuantile(volume.wrrate);
+      line.appendChild(column);
+
+      column = document.createElement("td");
+      column.innerHTML = showQuantile(volume.wrwait);
+      line.appendChild(column);
+
+      table.appendChild(line);
+   }
+}
+
 function showInfo (data) {
    var table = document.getElementsByClassName ('sysinfo')[0];
 
@@ -209,6 +247,7 @@ function showAll (data) {
    listCPU(data);
    listMemory(data);
    listStorage(data);
+   listDiskIO(data);
 }
 
 function getInfo () {
@@ -254,7 +293,7 @@ window.onload = function() {
    </table>
    <center>
    <p>
-   <h1>SYSTEM INFORMATION</h1>
+   <h1>System Information</h1>
    <table class="housewidetable sysinfo" border="0">
       <tr>
          <th width="10%">HOST</th>
@@ -304,6 +343,20 @@ window.onload = function() {
          <th width="20%">SIZE</th>
          <th width="20%">USED</th>
          <th width="20%">AVAILABLE</th>
+      </tr>
+   </table>
+   </p>
+   <br>
+   <br>
+   <p>
+   <h1>Disk I/O</h1>
+   <table class="housewidetable diskio" border="0">
+      <tr>
+         <th width="40%">VOLUME</th>
+         <th width="15%">READS</th>
+         <th width="15%">LATENCY</th>
+         <th width="15%">WRITES</th>
+         <th width="15%">LATENCY</th>
       </tr>
    </table>
    </p>

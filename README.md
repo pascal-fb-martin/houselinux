@@ -102,13 +102,13 @@ The following is currently implemented:
 
 * /proc/stat is used to retrieve the CPU usage and /proc/loadavr is used to retrieve load averages.
 
+* /proc/diskstats is used to retrieve disk IO metrics, especially latency (experimental).
+
 * Metrics are periodically pushed to all detected log services for permanent storage, in the same JSON format as returned by the /metrics/status endpoint.
 
 * uname(2), sysinfo(2) and sysconf(2) are used to retrieve system information.
 
 The following is planned in the near future:
-
-* /proc/diskstats will be used to retrieve disk IO metrics, especially latency.
 
 * /proc/net/dev will be used to retrieve network IO traffic number, including error counts.
 
