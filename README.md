@@ -50,14 +50,20 @@ This endpoint returns a complete set of metrics, as a JSON object defined as fol
 * metrics.storage: all storage related metrics. This is a JSON object where each item describe a volume (see below).
 * metrics.storage._volume_.size: total size of the volume.
 * metrics.storage._volume_.free: free space in this volume.
-* metrics.cpu: all CPU related metrics (TBD).
+* metrics.cpu: all CPU related metrics (see below).
+* metrics.cpu.busy: the total CPU busy time (user mode, system mode, interrupt, etc.)
+* metrics.cpu.iowait: the idle time while waiting for an I/O.
+* metrics.cpu.steal: time slices stolen when running as a VM guest.
+* metrics.cpu.load: the 3 Unix load average values (1mn, 5mn, 15mn) multiplied by 100, with a null unit. Each load value is the latest value sampled (and can be up to a minute old)
 
-an individual metric is an array of 2, 3 or 4 elements:
+An individual metric is an array of 2, 3 or 4 elements, typically:
 * If the array has 2 elements, the format is: value, unit.
 * If the array has 3 elements, the format is: min, max, unit.
 * If the array has 4 elements, the format is: min, median, max, unit.
 
-The unit is typically "GB", "MB", "TB", "%", etc. It can be null if the metrics has no unit, e.g. a counter. The null unit must be present but integer 0 is accepted as equivalent to null: "[12345,null]" and [12345,0]" are equivalent.
+(The load average is an exception, see description of metrics.cpu.load above.)
+
+The unit is typically "GB", "MB", "TB", "%", etc. It can be null or empty if the metrics has no unit, e.g. the load average or a counter. The null unit must be present but integer 0 is accepted as equivalent to null: "[12345,null]" and [12345,0]" are equivalent.
 
 A metric normally reported with 3 or 4 elements may be reported with 2 elements when the min and max values are equal, or not reported at all if the min and max are both 0 (any missing metrics must be considered 0).
 
@@ -78,13 +84,11 @@ The following is currently implemented:
 
 * /proc/meminfo is used to retrieve the RAM usage.
 
-* /proc/stat is used to retrieve the CPU usage.
+* /proc/stat is used to retrieve the CPU usage and /proc/loadavr is used to retrieve load averages.
 
 * Metrics are periodically pushed to all detected log services for permanent storage, in the same JSON format as returned by the /metrics/status endpoint.
 
 The following is planned in the near future:
-
-* /proc/loadavr will be used to retrieve system load estimates.
 
 * /proc/diskstats will be used to retrieve disk IO metrics, especially latency.
 

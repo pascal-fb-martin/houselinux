@@ -16,16 +16,19 @@ function showQuantile (data) {
     if (!data) {
         return "0";
     }
+    var unit = '';
+    if (data[data.length-1]) unit = ' ' + data[data.length-1];
+
     if (data.length == 2) {
-        return data[0] + ' ' + data[1];
+        return data[0] + unit;
     }
     if (data.length == 3) {
-        if (data[0] == data[1]) return data[0] + ' ' + data[2];
-        return data[0] + '/' + data[1] + ' ' + data[2];
+        if (data[0] == data[1]) return data[0] + unit;
+        return data[0] + '/' + data[1] + unit;
     }
     if (data.length == 4) {
-        if (data[0] == data[2]) return data[0] + ' ' + data[3];
-        return data[0] + '/' + data[1] + '/' + data[2] + ' ' + data[3];
+        if (data[0] == data[2]) return data[0] + unit;
+        return data[0] + '/' + data[1] + '/' + data[2] + unit;
     }
     return '(invalid)';
 }
@@ -76,6 +79,10 @@ function listCPU (data) {
 
    column = document.createElement("td");
    column.innerHTML = showQuantile(cpu.busy);
+   line.appendChild(column);
+
+   column = document.createElement("td");
+   column.innerHTML = showQuantile(cpu.load);
    line.appendChild(column);
 
    column = document.createElement("td");
@@ -198,9 +205,10 @@ window.onload = function() {
    <h1>CPU</h1>
    <table class="housewidetable cpu" border="0">
       <tr>
-         <th width="33%">BUSY</th>
-         <th width="33%">IO WAIT</th>
-         <th width="33%">STEAL</th>
+         <th width="25%">BUSY</th>
+         <th width="25%">LOAD</th>
+         <th width="25%">IO WAIT</th>
+         <th width="25%">STEAL</th>
       </tr>
    </table>
    </p>

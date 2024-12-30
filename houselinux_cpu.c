@@ -54,6 +54,9 @@ struct HouseCpuMetrics {
     long long busy[HOUSE_CPU_SPAN];
     long long iowait[HOUSE_CPU_SPAN];
     long long steal[HOUSE_CPU_SPAN];
+    long long load1;
+    long long load5;
+    long long load15;
 };
 
 static struct HouseCpuMetrics HouseCpuLatest;
@@ -88,6 +91,17 @@ int houselinux_cpu_status (char *buffer, int size) {
                                       HouseCpuLatest.steal,
                                       HOUSE_CPU_SPAN, "%");
     if (cursor >= size) return 0;
+
+    if ((HouseCpuLatest.load1 > 0) ||
+        (HouseCpuLatest.load5 > 0) ||
+        (HouseCpuLatest.load15 > 0)) {
+        cursor += snprintf (buffer+cursor, size-cursor,
+                            ",\"load\":[%lld,%lld,%lld,0]",
+                            HouseCpuLatest.load1,
+                            HouseCpuLatest.load5,
+                            HouseCpuLatest.load15);
+        if (cursor >= size) return 0;
+    }
     if (cursor <= start) return 0; // No data to report.
 
     buffer[start] = '{';
@@ -95,6 +109,25 @@ int houselinux_cpu_status (char *buffer, int size) {
     if (cursor >= size) return 0;
 
     return cursor;
+}
+
+static void houselinux_cpu_load (struct HouseCpuMetrics *latest) {
+
+    char buffer[80];
+    FILE *f = fopen ("/proc/loadavg", "r");
+    if (!f) return;
+
+    char *line = fgets (buffer, sizeof(buffer), f);
+    if (line) {
+        float v[3];
+        int count = sscanf (line, "%f %f %f ", &v[0], &v[1], &v[2]);
+        if (count == 3) {
+            latest->load1 = (long long)(v[0] * 100);
+            latest->load5 = (long long)(v[1] * 100);
+            latest->load15 = (long long)(v[2] * 100);
+        }
+    }
+    fclose (f);
 }
 
 static void houselinux_cpu_stat (struct HouseCpuMetrics *latest, int index) {
@@ -184,6 +217,7 @@ void houselinux_cpu_background (time_t now) {
     } else {
         int index = (now / HOUSE_CPU_PERIOD) % HOUSE_CPU_SPAN;
         houselinux_cpu_stat (&HouseCpuLatest, index);
+        houselinux_cpu_load (&HouseCpuLatest);
         HouseCpuLatest.timestamp[index] = now;
     }
 }
