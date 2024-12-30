@@ -82,6 +82,8 @@ This endpoint returns general information about the server hardware, OS, uptime,
 * info.cores: the number of active cores.
 * info.boot: the time of the last boot.
 
+This status information is visible in the Status web page.
+
 ## Implementation
 
 The following is currently implemented:
@@ -94,11 +96,11 @@ The following is currently implemented:
 
 * Metrics are periodically pushed to all detected log services for permanent storage, in the same JSON format as returned by the /metrics/status endpoint.
 
+* uname(2), sysinfo(2) and sysconf(2) are used to retrieve system information.
+
 The following is planned in the near future:
 
 * /proc/diskstats will be used to retrieve disk IO metrics, especially latency.
 
 * /proc/net/dev will be used to retrieve network IO traffic number, including error counts.
-
-* /proc/version (kernel version), /etc/os-release (Linux distribution) and /proc/uptime will be used to collect general information about the server (see endpoint /metrics/info).
 
