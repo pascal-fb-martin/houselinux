@@ -5,11 +5,17 @@ The house Motion sidekick service.
 
 This service aggregates activity and performance metrics from the local Linux system: RAM, storage and CPU usage. It implement the House metrics web API.
 
+The author was using Cockpit as a convenient way to access an overview of his 10 to 15 small computers (cheap Raspberyy Pi and used-market Mini PC systems) and was looking for a way to continuously record some performance metrics.
+
+The Cockpit project apparently pivoted to a management-only focus and removed the overview part. (This monitoring portion was good for a home lab, but continuous monitoring would have been costly..).
+
 After trying multiple monitoring systems, it seems that there is no general metric recording solution compatible with small systems:
-* Command line tools typically specialize in one area (CPU or IO). These typically are not optimized for constant recording. Running then continuously may tax the local system (CPU and storage), especially on small computers with microSD cards or EMMC storage.
-* "Traditional" open source monitoring tools tend to focus on raising up/down alerts rather than collecting data for performance analysis.
-* "Cloud generation" open source monitoring tools tend to be memory hogs (Prometheus).
+* Command line tools typically specialize in one area (CPU or IO). These are usually not optimized for constant recording. Running them continuously may tax the local system (CPU and storage), especially on small computers with micro SD cards or EMMC storage.
+* "Traditional" open source monitoring tools tend to focus on raising up/down alerts rather than collecting data for performance analysis. When they collect performance data, the advice is to limit the amount for performance reasons (see Nagios).
+* "Cloud generation" open source monitoring tools tend to be memory hogs (see Prometheus).
 * Proprietary tools target large accounts, and price accordingly.
+
+It was time to get some fun with a simple more home-grown monitoring solution.
 
 The goal of Houselinux is to gather an extensive set of OS metrics, and report them to external monitoring and logging systems. The objective is to:
 * Use little CPU.
@@ -18,7 +24,9 @@ The goal of Houselinux is to gather an extensive set of OS metrics, and report t
 
 The later goal leads to a choice of reporting quantile data at low frequency. The most basic quantile data is the set min and max. The min and max values give you and idea of the value fluctuations, but no idea about how the sampled values are spread within the interval. A slightly less basic set is min, median, max. The addition of a median value provides an indication of the values being centered or overall biased toward the min or max. Adding quartiles would give an indication of the values being either concentrated around the median, the min or max, or else evenly spread. Each addition add to the quality of the information, but exponentially increases both the computational and storage cost. The plan is to adjust based on experience. A different quality level might be needed metric by metric.
 
-This service is not intended to have a user interface. The existing web pages are for maintenance and troubleshooting only.
+This service is not intended to have a user interface. The existing web pages are for maintenance and troubleshooting only. This is meant to collect metrics, and the visualization part might make use of tools like Grafana.
+
+The web API implemented by HouseLinux is meant to be mostly independent from Linux or Unix, even while some data (e.g. load average) might not exist on other OSes.
 
 ## Installation
 
@@ -51,9 +59,9 @@ This endpoint returns a complete set of metrics, as a JSON object defined as fol
 * metrics.storage._volume_.free: free space in this volume.
 * metrics.cpu: all CPU related metrics (see below).
 * metrics.cpu.busy: the total CPU busy time (user mode, system mode, interrupt, etc.)
-* metrics.cpu.iowait: the idle time while waiting for an I/O.
-* metrics.cpu.steal: time slices stolen when running as a VM guest.
-* metrics.cpu.load: the 3 Unix load average values (1mn, 5mn, 15mn) multiplied by 100, with a null unit. Each load value is the latest value sampled (and can be up to a minute old)
+* metrics.cpu.iowait: the idle time while waiting for an I/O, if available.
+* metrics.cpu.steal: time slices stolen when running as a VM guest, if available.
+* metrics.cpu.load: the 3 Unix load average values (1mn, 5mn, 15mn) multiplied by 100, with a null unit. Each load value is the latest value sampled (and can be up to a minute old). Not present if not available.
 
 An individual metric is an array of 2, 3 or 4 elements, typically:
 * If the array has 2 elements, the format is: value, unit.
@@ -66,7 +74,7 @@ The unit is typically "GB", "MB", "TB", "%", etc. It can be null or empty if the
 
 A metric normally reported with 3 or 4 elements may be reported with 2 elements when the min and max values are equal, or not reported at all if the min and max are both 0 (any missing metrics must be considered 0).
 
-The unit used for a given metrics may change from machine to machine, and from time to time. It is legal to change the unit to make the data more compact. The precision of most metrics must be at least 3 digits (2 digits for percentages). Adjusting the unit may make the data more compact. For example, 10240 MB can be reported as 10.0 GB.
+The unit used for a given metrics may change from machine to machine, and from time to time. It is legal to change the unit to make the data more compact, for example report 200 GB instead of 204856 MB. The precision of most metrics should be at least 3 digits (2 digits is OK for percentages).
 
 This status information is visible in the Status web page.
 
