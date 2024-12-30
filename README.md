@@ -38,7 +38,6 @@ GET /metrics/status
 ```
 This endpoint returns a complete set of metrics, as a JSON object defined as follows:
 * host: the name of the server running this service.
-* proxy: the name of the server used for redirection (typically the same as host).
 * timestamp: the time of the request/response.
 * metrics.period: the sampling period used by this service. The client should poll periodically using this value.
 * metrics.memory: all RAM-related metrics (see below)
@@ -74,7 +73,14 @@ This status information is visible in the Status web page.
 ```
 GET /metrics/info
 ```
-This endpoint returns general information about the server hardware, OS, uptime, etc. They are separate from the metrics because they seldom change and are not performance related. The data is a JSON object, TBD.
+This endpoint returns general information about the server hardware, OS, uptime, etc. They are separate from the metrics because they seldom change and are not performance related. The data is a JSON object, as follows:
+* host: the name of the server running this service.
+* timestamp: the time of the request/response.
+* info.arch: the name of the processor architecture (not the processor model).
+* info.os: the name of the OS (e.g. "Linux").
+* info.version: the version of the OS kernel.
+* info.cores: the number of active cores.
+* info.boot: the time of the last boot.
 
 ## Implementation
 

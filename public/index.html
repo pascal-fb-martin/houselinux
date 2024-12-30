@@ -162,6 +162,47 @@ function listMemory (data) {
    table.appendChild(line);
 }
 
+function showInfo (data) {
+   var table = document.getElementsByClassName ('sysinfo')[0];
+
+   for (var i = table.childNodes.length - 1; i > 1; i--) {
+       table.removeChild(table.childNodes[i]);
+   }
+
+   var line = document.createElement("tr");
+   var info = data.info;
+   if (!info) return;
+
+   column = document.createElement("td");
+   column.innerHTML = data.host;
+   line.appendChild(column);
+
+   column = document.createElement("td");
+   column.innerHTML = friendlyTime(info.boot);
+   line.appendChild(column);
+
+   column = document.createElement("td");
+   column.innerHTML = info.arch;
+   line.appendChild(column);
+
+   column = document.createElement("td");
+   column.innerHTML = info.os;
+   line.appendChild(column);
+
+   column = document.createElement("td");
+   column.innerHTML = info.version
+   line.appendChild(column);
+
+   column = document.createElement("td");
+   if (info.cores)
+       column.innerHTML = info.cores;
+   else
+       column.innerHTML = "(unknown)";
+   line.appendChild(column);
+
+   table.appendChild(line);
+}
+
 function showAll (data) {
    var title = data.host+' - Metrics';
    document.getElementsByTagName ('title')[0].innerHTML = title;
@@ -170,12 +211,22 @@ function showAll (data) {
    listStorage(data);
 }
 
+function getInfo () {
+   var command = new XMLHttpRequest();
+   command.open("GET", "/metrics/info");
+   command.onreadystatechange = function () {
+      if (command.readyState === 4 && command.status === 200) {
+         showInfo((JSON.parse(command.responseText)));
+      }
+   }
+   command.send(null);
+}
+
 function refreshMotion () {
    var command = new XMLHttpRequest();
    command.open("GET", "/metrics/status");
    command.onreadystatechange = function () {
       if (command.readyState === 4 && command.status === 200) {
-         var type = command.getResponseHeader("Content-Type");
          showAll((JSON.parse(command.responseText)));
       }
    }
@@ -183,6 +234,7 @@ function refreshMotion () {
 }
 
 window.onload = function() {
+    getInfo ();
     refreshMotion ();
     setInterval (refreshMotion, 5000);
 };
@@ -201,6 +253,21 @@ window.onload = function() {
    </td></tr>
    </table>
    <center>
+   <p>
+   <h1>SYSTEM INFORMATION</h1>
+   <table class="housewidetable sysinfo" border="0">
+      <tr>
+         <th width="10%">HOST</th>
+         <th width="15%">BOOT</th>
+         <th width="10%">CPU</th>
+         <th width="10%">OS</th>
+         <th width="50%">VERSION</th>
+         <th width="5%">CORES</th>
+      </tr>
+   </table>
+   </p>
+   <br>
+   <br>
    <p>
    <h1>CPU</h1>
    <table class="housewidetable cpu" border="0">

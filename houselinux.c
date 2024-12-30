@@ -31,6 +31,8 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/utsname.h>
+#include <sys/sysinfo.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <signal.h>
@@ -57,6 +59,7 @@ static int use_houseportal = 0;
 static char HostName[256];
 
 
+// Return current metrics.
 static const char *houselinux_status (const char *method, const char *uri,
                                       const char *data, int length) {
     static char buffer[65537];
@@ -71,8 +74,52 @@ static const char *houselinux_status (const char *method, const char *uri,
     cursor += houselinux_cpu_status (buffer+cursor, sizeof(buffer)-cursor);
     cursor += houselinux_memory_status (buffer+cursor, sizeof(buffer)-cursor);
     cursor += houselinux_storage_status (buffer+cursor, sizeof(buffer)-cursor);
-    cursor += snprintf (buffer+cursor, sizeof(buffer)-cursor, "}}");
+    snprintf (buffer+cursor, sizeof(buffer)-cursor, "}}");
     if (uri) echttp_content_type_json ();
+    return buffer;
+}
+
+// Return more static information.
+static const char *houselinux_info (const char *method, const char *uri,
+                                    const char *data, int length) {
+
+    static char buffer[65537];
+    int cursor;
+    char *sep = "";
+    time_t now = time(0);
+
+    cursor = snprintf (buffer, sizeof(buffer),
+                       "{\"host\":\"%s\","
+                           "\"timestamp\":%lld,\"info\":{",
+                       HostName, (long long)now);
+
+    struct utsname uts;
+    if (!uname (&uts)) {
+        cursor += snprintf (buffer+cursor, sizeof(buffer)-cursor,
+                            "\"arch\":\"%s\",\"os\":\"%s\",\"version\":\"%s\"",
+                            uts.machine, uts.sysname, uts.version);
+        if (cursor >= sizeof(buffer)) return 0;
+        sep = ",";
+    }
+
+    struct sysinfo info;
+    if (!sysinfo(&info)) {
+        cursor += snprintf (buffer+cursor, sizeof(buffer)-cursor,
+                            "%s\"boot\":%lld",
+                            sep, (long long)now - info.uptime);
+        if (cursor >= sizeof(buffer)) return 0;
+        sep = ",";
+    }
+
+#ifdef _SC_NPROCESSORS_ONLN
+    cursor += snprintf (buffer+cursor, sizeof(buffer)-cursor,
+                        "%s\"cores\":%ld", sep, sysconf (_SC_NPROCESSORS_ONLN));
+    if (cursor >= sizeof(buffer)) return 0;
+    sep = ",";
+#endif
+
+    snprintf (buffer+cursor, sizeof(buffer)-cursor, "}}");
+    echttp_content_type_json ();
     return buffer;
 }
 
@@ -153,6 +200,7 @@ int main (int argc, const char **argv) {
     houselinux_storage_initialize (argc, argv);
 
     echttp_route_uri ("/metrics/status", houselinux_status);
+    echttp_route_uri ("/metrics/info", houselinux_info);
     echttp_static_route ("/", "/usr/local/share/house/public");
 
     echttp_background (&houselinux_background);
