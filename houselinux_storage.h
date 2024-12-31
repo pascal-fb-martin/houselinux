@@ -17,7 +17,6 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  *
- *
  * houselinux_storage.h - Collect metrics on the Linux storage resources.
  */
 void houselinux_storage_initialize (int argc, const char **argv);

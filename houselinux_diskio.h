@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  *
- * houselinux_diskio.c - Collect metrics on the Linux disk IO performances.
+ * houselinux_diskio.h - Collect metrics on the Linux disk IO performances.
  */
 void houselinux_diskio_initialize (int argc, const char **argv);
 void houselinux_diskio_background (time_t now);

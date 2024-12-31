@@ -17,8 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  *
- *
- * houselinux_reduce.c - Generate quantil representations of metrics series.
+ * houselinux_reduce.h - Generate quantil representations of metrics series.
  */
 
 int houselinux_reduce_json (char *buffer, int size,

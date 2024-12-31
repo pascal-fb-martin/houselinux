@@ -66,136 +66,104 @@ function toPercentage (data, base) {
     return result;
 }
 
-function listCPU (data) {
-   var table = document.getElementsByClassName ('cpu')[0];
-
-   for (var i = table.childNodes.length - 1; i > 1; i--) {
-       table.removeChild(table.childNodes[i]);
+function wipeout (name) {
+   var table = document.getElementsByClassName (name)[0];
+   if (table) {
+       for (var i = table.childNodes.length - 1; i > 1; i--) {
+           table.removeChild(table.childNodes[i]);
+       }
    }
+   return table;
+}
 
-   var line = document.createElement("tr");
+function quantileColumn (data) {
+   var column = document.createElement("td");
+   column.innerHTML = showQuantile(data);
+   return column;
+}
+
+function textColumn (text) {
+   var column = document.createElement("td");
+   column.innerHTML = text;
+   return column;
+}
+
+function listCPU (data) {
+   var table = wipeout ('cpu');
+
    var cpu = data.metrics.cpu;
    if (!cpu) return;
 
-   column = document.createElement("td");
-   column.innerHTML = showQuantile(cpu.busy);
-   line.appendChild(column);
-
-   column = document.createElement("td");
-   column.innerHTML = showQuantile(cpu.load);
-   line.appendChild(column);
-
-   column = document.createElement("td");
-   column.innerHTML = showQuantile(cpu.iowait);
-   line.appendChild(column);
-
-   column = document.createElement("td");
-   column.innerHTML = showQuantile(cpu.steal);
-   line.appendChild(column);
-
+   var line = document.createElement("tr");
+   line.appendChild(quantileColumn (cpu.busy));
+   line.appendChild(quantileColumn (cpu.load));
+   line.appendChild(quantileColumn (cpu.iowait));
+   line.appendChild(quantileColumn (cpu.steal));
    table.appendChild(line);
 }
 
 function listStorage (data) {
-   var table = document.getElementsByClassName ('storage')[0];
+   var table = wipeout ('storage');
 
-   for (var i = table.childNodes.length - 1; i > 1; i--) {
-       table.removeChild(table.childNodes[i]);
-   }
    if (! data.metrics.storage) return;
 
    for (var name in data.metrics.storage) {
-      var line = document.createElement("tr");
       var volume = data.metrics.storage[name];
 
-      var column = document.createElement("td");
-      column.innerHTML = name;
-      line.appendChild(column);
-
-      column = document.createElement("td");
-      column.innerHTML = showQuantile(volume.size);
-      line.appendChild(column);
-
-      column = document.createElement("td");
-      column.innerHTML = showQuantile(toPercentage(revertQuantile(volume.free, volume.size[0]), volume.size[0]));
-      line.appendChild(column);
-
-      column = document.createElement("td");
-      column.innerHTML = showQuantile(volume.free);
-      line.appendChild(column);
-
+      var line = document.createElement("tr");
+      line.appendChild(textColumn (name));
+      line.appendChild(quantileColumn (volume.size));
+      line.appendChild(quantileColumn (toPercentage(revertQuantile(volume.free, volume.size[0]), volume.size[0])));
+      line.appendChild(quantileColumn (volume.free));
       table.appendChild(line);
    }
 }
 
 function listMemory (data) {
-   var table = document.getElementsByClassName ('memory')[0];
+   var table = wipeout ('memory');
 
-   for (var i = table.childNodes.length - 1; i > 1; i--) {
-       table.removeChild(table.childNodes[i]);
-   }
-   var line = document.createElement("tr");
    var memory = data.metrics.memory;
 
-   var column = document.createElement("td");
-   column.innerHTML = showQuantile(memory.size);
-   line.appendChild(column);
-
-   column = document.createElement("td");
-   column.innerHTML = showQuantile(toPercentage(revertQuantile(memory.available, memory.size[0]), memory.size[0]));
-   line.appendChild(column);
-
-   column = document.createElement("td");
-   column.innerHTML = showQuantile(memory.available);
-   line.appendChild(column);
-
-   column = document.createElement("td");
-   column.innerHTML = showQuantile(memory.dirty);
-   line.appendChild(column);
-
-   column = document.createElement("td");
-   column.innerHTML = showQuantile(memory.swap);
-   line.appendChild(column);
-
-   column = document.createElement("td");
-   column.innerHTML = showQuantile(memory.swapped);
-   line.appendChild(column);
-
+   var line = document.createElement("tr");
+   line.appendChild(quantileColumn (memory.size));
+   line.appendChild(quantileColumn (toPercentage(revertQuantile(memory.available, memory.size[0]), memory.size[0])));
+   line.appendChild(quantileColumn (memory.available));
+   line.appendChild(quantileColumn (memory.dirty));
+   line.appendChild(quantileColumn (memory.swap));
+   line.appendChild(quantileColumn (memory.swapped));
    table.appendChild(line);
 }
 
 function listDiskIO (data) {
-   var table = document.getElementsByClassName ('diskio')[0];
+   var table = wipeout ('diskio');
 
-   for (var i = table.childNodes.length - 1; i > 1; i--) {
-       table.removeChild(table.childNodes[i]);
-   }
    if (! data.metrics.disk) return;
 
    for (var name in data.metrics.disk) {
-      var line = document.createElement("tr");
       var volume = data.metrics.disk[name];
 
-      var column = document.createElement("td");
-      column.innerHTML = name;
-      line.appendChild(column);
+      var line = document.createElement("tr");
+      line.appendChild(textColumn (name));
+      line.appendChild(quantileColumn (volume.rdrate));
+      line.appendChild(quantileColumn (volume.rdwait));
+      line.appendChild(quantileColumn (volume.wrrate));
+      line.appendChild(quantileColumn (volume.wrwait));
+      table.appendChild(line);
+   }
+}
 
-      column = document.createElement("td");
-      column.innerHTML = showQuantile(volume.rdrate);
-      line.appendChild(column);
+function listNetIO (data) {
+   var table = wipeout ('netio');
 
-      column = document.createElement("td");
-      column.innerHTML = showQuantile(volume.rdwait);
-      line.appendChild(column);
+   if (! data.metrics.net) return;
 
-      column = document.createElement("td");
-      column.innerHTML = showQuantile(volume.wrrate);
-      line.appendChild(column);
+   for (var name in data.metrics.net) {
+      var netio = data.metrics.net[name];
 
-      column = document.createElement("td");
-      column.innerHTML = showQuantile(volume.wrwait);
-      line.appendChild(column);
-
+      var line = document.createElement("tr");
+      line.appendChild(textColumn (name));
+      line.appendChild(quantileColumn (netio.rxrate));
+      line.appendChild(quantileColumn (netio.txrate));
       table.appendChild(line);
    }
 }
@@ -207,37 +175,21 @@ function showInfo (data) {
        table.removeChild(table.childNodes[i]);
    }
 
-   var line = document.createElement("tr");
    var info = data.info;
    if (!info) return;
 
-   column = document.createElement("td");
-   column.innerHTML = data.host;
-   line.appendChild(column);
+   var line = document.createElement("tr");
+   line.appendChild(textColumn (data.host));
 
    column = document.createElement("td");
    column.innerHTML = friendlyTime(info.boot);
    line.appendChild(column);
 
-   column = document.createElement("td");
-   column.innerHTML = info.arch;
-   line.appendChild(column);
-
-   column = document.createElement("td");
-   column.innerHTML = info.os;
-   line.appendChild(column);
-
-   column = document.createElement("td");
-   column.innerHTML = info.version
-   line.appendChild(column);
-
-   column = document.createElement("td");
-   if (info.cores)
-       column.innerHTML = info.cores;
-   else
-       column.innerHTML = "(unknown)";
-   line.appendChild(column);
-
+   line.appendChild(textColumn (info.arch));
+   line.appendChild(textColumn (info.os));
+   line.appendChild(textColumn (info.version));
+   if (!info.cores) info.cores = 1;
+   line.appendChild(textColumn (info.cores));
    table.appendChild(line);
 }
 
@@ -248,6 +200,7 @@ function showAll (data) {
    listMemory(data);
    listStorage(data);
    listDiskIO(data);
+   listNetIO(data);
 }
 
 function getInfo () {
@@ -357,6 +310,18 @@ window.onload = function() {
          <th width="15%">LATENCY</th>
          <th width="15%">WRITES</th>
          <th width="15%">LATENCY</th>
+      </tr>
+   </table>
+   </p>
+   <br>
+   <br>
+   <p>
+   <h1>Network I/O</h1>
+   <table class="housewidetable netio" border="0">
+      <tr>
+         <th width="40%">NETWORK</th>
+         <th width="30%">RECEIVE</th>
+         <th width="30%">TRANSMIT</th>
       </tr>
    </table>
    </p>

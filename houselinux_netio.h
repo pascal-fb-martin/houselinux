@@ -17,9 +17,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  *
- * houselinux_memory.h - Collect metrics on the Linux memory resources.
+ * houselinux_netio.h - Collect metrics on the Linux network IO performances.
  */
-void houselinux_memory_initialize (int argc, const char **argv);
-void houselinux_memory_background (time_t now);
-int houselinux_memory_status (char *buffer, int size);
+void houselinux_netio_initialize (int argc, const char **argv);
+void houselinux_netio_background (time_t now);
+int houselinux_netio_status (char *buffer, int size);
 
