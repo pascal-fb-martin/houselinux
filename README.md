@@ -28,6 +28,10 @@ This service is not intended to have a user interface. The existing web pages ar
 
 The web API implemented by HouseLinux is meant to be mostly independent from Linux or Unix, even while some data (e.g. load average) might not exist on other OSes.
 
+## Warning
+
+HouseLinux is still fairly new. The list of metrics recorded may change significantly in the near future.
+
 ## Installation
 
 This service depends on the House series environment:
@@ -62,6 +66,14 @@ This endpoint returns a complete set of metrics, as a JSON object defined as fol
 * metrics.cpu.iowait: the idle time while waiting for an I/O, if available.
 * metrics.cpu.steal: time slices stolen when running as a VM guest, if available.
 * metrics.cpu.load: the 3 Unix load average values (1mn, 5mn, 15mn) multiplied by 100, with a null unit. Each load value is the latest value sampled (and can be up to a minute old). Not present if not available.
+* metrics.disk: all disk I/O related metrics (see below).
+* metrics.disk._device_.rdrate: read operation rate. (Might be replaced by a byte rate later.)
+* metrics.disk._device_.rdwait: read operation latency.
+* metrics.disk._device_.wrrate: write operation rate. (Might be replaced by a byte rate later.)
+* metrics.disk._device_.wrwait: write operation latency.
+* metrics.net: all network I/O related metrics (see below).
+* metrics.net._device_.rxrate: receive traffic in KByte per second.
+* metrics.net._device_.txrate: transmit traffic in KByte per second.
 
 An individual metric is an array of 2, 3 or 4 elements, typically:
 * If the array has 2 elements, the format is: value, unit.
@@ -104,11 +116,9 @@ The following is currently implemented:
 
 * /proc/diskstats is used to retrieve disk IO metrics, especially latency (experimental).
 
+* /proc/net/dev is used to retrieve network IO traffic number.
+
 * Metrics are periodically pushed to all detected log services for permanent storage, in the same JSON format as returned by the /metrics/status endpoint.
 
 * uname(2), sysinfo(2) and sysconf(2) are used to retrieve system information.
-
-The following is planned in the near future:
-
-* /proc/net/dev will be used to retrieve network IO traffic number, including error counts.
 

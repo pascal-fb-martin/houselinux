@@ -120,6 +120,8 @@ void houselinux_netio_initialize (int argc, const char **argv) {
         char *sep = strchr (line, ':');
         if (!sep) continue;
         *sep = 0;
+        if (!strcmp (device, "lo")) continue; // Ignore the loopback.
+
         line = sep + 1;
         for (i = 0; i < 16; ++i) {
             line = skipvalue (line);
