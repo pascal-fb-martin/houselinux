@@ -60,8 +60,11 @@
 static int use_houseportal = 0;
 static char HostName[256];
 
+static time_t HouseStartTime = 0;
 
-// Return current metrics.
+// Return a compact summary of current metrics.
+// (This function is also called in the background, without a HTTP request.)
+//
 static const char *houselinux_status (const char *method, const char *uri,
                                       const char *data, int length) {
     static char buffer[65537];
@@ -80,6 +83,43 @@ static const char *houselinux_status (const char *method, const char *uri,
     cursor += houselinux_netio_status (buffer+cursor, sizeof(buffer)-cursor);
     snprintf (buffer+cursor, sizeof(buffer)-cursor, "}}");
     if (uri) echttp_content_type_json ();
+    return buffer;
+}
+
+// Return the complete metrics, only on request.
+//
+static const char *houselinux_details (const char *method, const char *uri,
+                                       const char *data, int length) {
+    static char buffer[65537];
+    const char *sincearg = echttp_parameter_get ("since");
+    int c;
+    time_t now = time(0);
+
+    time_t since = 0;
+    if (sincearg) {
+        since = (time_t) atoll (sincearg);
+        if (since <= HouseStartTime) since = 0; // Guardrail.
+    }
+
+    int sampleperiod = 300;
+    time_t samplestart = now - sampleperiod;
+    if (samplestart < HouseStartTime) {
+        samplestart = HouseStartTime;
+        sampleperiod = now - samplestart;
+    }
+    c = snprintf (buffer, sizeof(buffer),
+                       "{\"host\":\"%s\",\"timestamp\":%lld,"
+                          "\"Metrics\":{\"start\":%lld,\"period\":%d",
+                       HostName, (long long)now,
+                       (long long)samplestart, sampleperiod);
+
+    c += houselinux_cpu_details (buffer+c, sizeof(buffer)-c, now, since);
+    c += houselinux_memory_details (buffer+c, sizeof(buffer)-c, now, since);
+    c += houselinux_storage_details (buffer+c, sizeof(buffer)-c, now, since);
+    c += houselinux_diskio_details (buffer+c, sizeof(buffer)-c, now, since);
+    c += houselinux_netio_details (buffer+c, sizeof(buffer)-c, now, since);
+    snprintf (buffer+c, sizeof(buffer)-c, "}}");
+    echttp_content_type_json ();
     return buffer;
 }
 
@@ -209,11 +249,13 @@ int main (int argc, const char **argv) {
 
     echttp_route_uri ("/metrics/status", houselinux_status);
     echttp_route_uri ("/metrics/info", houselinux_info);
+    echttp_route_uri ("/metrics/details", houselinux_details);
     echttp_static_route ("/", "/usr/local/share/house/public");
 
     echttp_background (&houselinux_background);
 
     houselog_event ("SERVICE", "metrics", "START", "ON %s", HostName);
+    HouseStartTime = time(0);
     echttp_loop();
 }
 

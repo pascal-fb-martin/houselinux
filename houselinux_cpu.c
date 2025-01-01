@@ -31,8 +31,11 @@
  *
  * int houselinux_cpu_status (char *buffer, int size);
  *
- *    A function that populates a status overview of the CPU usage in JSON.
+ *    A function that populates a compact status of the CPU usage in JSON.
  *
+ * int houselinux_cpu_details (char *buffer, int size, time_t now, time_t since);
+ *
+ *    A function that populates a detailed report of the CPU usage in JSON.
  */
 
 #include <string.h>
@@ -90,6 +93,54 @@ int houselinux_cpu_status (char *buffer, int size) {
                                       "steal",
                                       HouseCpuLatest.steal,
                                       HOUSE_CPU_SPAN, "%");
+    if (cursor >= size) return 0;
+
+    if ((HouseCpuLatest.load1 > 0) ||
+        (HouseCpuLatest.load5 > 0) ||
+        (HouseCpuLatest.load15 > 0)) {
+        cursor += snprintf (buffer+cursor, size-cursor,
+                            ",\"load\":[%lld,%lld,%lld,0]",
+                            HouseCpuLatest.load1,
+                            HouseCpuLatest.load5,
+                            HouseCpuLatest.load15);
+        if (cursor >= size) return 0;
+    }
+    if (cursor <= start) return 0; // No data to report.
+
+    buffer[start] = '{';
+    cursor += snprintf (buffer+cursor, size-cursor, "}");
+    if (cursor >= size) return 0;
+
+    return cursor;
+}
+
+int houselinux_cpu_details (char *buffer, int size, time_t now, time_t since) {
+
+    int cursor = 0;
+
+    cursor = snprintf (buffer, size, ",\"cpu\":");
+    if (cursor >= size) return 0;
+
+    int start = cursor;
+    cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor, since,
+                                              "busy", "%", now,
+                                              HOUSE_CPU_PERIOD, HOUSE_CPU_SPAN,
+                                              HouseCpuLatest.timestamp,
+                                              HouseCpuLatest.busy);
+    if (cursor >= size) return 0;
+
+    cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor, since,
+                                              "iowait", "%", now,
+                                              HOUSE_CPU_PERIOD, HOUSE_CPU_SPAN,
+                                              HouseCpuLatest.timestamp,
+                                              HouseCpuLatest.iowait);
+    if (cursor >= size) return 0;
+
+    cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor, since,
+                                              "steal", "%", now,
+                                              HOUSE_CPU_PERIOD, HOUSE_CPU_SPAN,
+                                              HouseCpuLatest.timestamp,
+                                              HouseCpuLatest.steal);
     if (cursor >= size) return 0;
 
     if ((HouseCpuLatest.load1 > 0) ||

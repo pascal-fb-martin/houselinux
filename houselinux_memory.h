@@ -22,4 +22,5 @@
 void houselinux_memory_initialize (int argc, const char **argv);
 void houselinux_memory_background (time_t now);
 int houselinux_memory_status (char *buffer, int size);
+int houselinux_memory_details (char *buffer, int size, time_t now, time_t since);
 

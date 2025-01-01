@@ -33,7 +33,16 @@
  *    ",[min,max,unit]"        (if there are less than 10 values)
  *    ",[min,median,max,unit]" (if there are 10 or more values)
  *
- *    This returns the number of character stored in buffer.
+ *    This returns the number of characters stored in buffer.
+ *
+ * int houselinux_reduce_details_json (char *buffer, int size, time_t since,
+ *                                     const char *name, const char *unit,
+ *                                     time_t now, int step, int count,
+ *                                     time_t *timestamps, long long *values);
+ *
+ *    Formats to JSON the elements of series that are more recent than since,
+ *    ended with the unit. If since is 0, all the data is returned.
+ *    This returns the number of characters stored in buffer.
  */
 
 #include <string.h>
@@ -107,6 +116,39 @@ int houselinux_reduce_json (char *buffer, int size,
                            unit);
     }
     // The SortedMetrics array will reused later, don't free.
+    if (cursor >= size) return 0;
+    return cursor;
+}
+
+int houselinux_reduce_details_json (char *buffer, int size, time_t since,
+                                    const char *name, const char *unit,
+                                    time_t now, int step, int count,
+                                    time_t *timestamps, long long *values) {
+
+    int cursor = snprintf (buffer, size, ",\"%s\":[", name);
+    if (cursor >= size) return 0;
+
+    int i;
+    for (i = count-1; i >= 0; --i) {
+        if ((values[i] != 0) && (timestamps[i] > since)) break;
+    }
+    if (i < 0) return 0; // No data to report, or _all_ zeroes.
+
+    // Retrieve the oldest sample.
+    //
+    int index = (now / step) % count;
+    if (timestamps[index] >= (now - step)) {
+        if (++index >= count) index = 0;
+    }
+
+    for (i = count; i > 0; --i) {
+        if (timestamps[index] > since) {
+            cursor += snprintf (buffer+cursor, size-cursor,
+                                "%lld,", values[index]);
+        }
+        if (++index >= count) index = 0;
+    }
+    cursor += snprintf (buffer+cursor, size-cursor, "\"%s\"]", unit);
     if (cursor >= size) return 0;
     return cursor;
 }

@@ -91,6 +91,17 @@ The unit used for a given metrics may change from machine to machine, and from t
 This status information is visible in the Status web page.
 
 ```
+GET /metrics/details
+GET /metrics/details?since=TIMESTAMP
+```
+
+This endpoint returns the same list of metrics as /metrics/status, but with full details, i.e. in time series instead of quantile summary form. The JSON object is named "Metrics" instead of "metrics", and contains two more items:
+* Metrics.start: the time of the first recorded metrics in each series.
+* Metrics.period: the time span covered by the metrics.
+
+If the since parameter is included, any value collected before that time will be excluded from the report. The timestamp value is in UNIX system time format (an integer).
+
+```
 GET /metrics/info
 ```
 This endpoint returns general information about the server hardware, OS, uptime, etc. They are separate from the metrics because they seldom change and are not performance related. The data is a JSON object, as follows:

@@ -24,3 +24,8 @@ int houselinux_reduce_json (char *buffer, int size,
                             const char *name,
                             long long *values, int count, const char *unit);
 
+int houselinux_reduce_details_json (char *buffer, int size, time_t since,
+                                    const char *name, const char *unit,
+                                    time_t now, int step, int count,
+                                    time_t *timestamps, long long *values);
+

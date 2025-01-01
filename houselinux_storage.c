@@ -34,6 +34,9 @@
  *
  *    A function that populates a status overview of the storage in JSON.
  *
+ * int houselinux_storage_details (char *buffer, int size, time_t now, time_t since);
+ *
+ *    A function that populates a detailed report of the storage in JSON.
  */
 
 #include <string.h>
@@ -62,7 +65,7 @@
 
 
 struct HouseMountMetrics {
-    time_t timestamp[HOUSE_MOUNT_SPAN];
+    time_t timestamps[HOUSE_MOUNT_SPAN];
     long long size;
     long long free[HOUSE_MOUNT_SPAN];
 };
@@ -139,6 +142,49 @@ int houselinux_storage_status (char *buffer, int size) {
     return saved;
 }
 
+int houselinux_storage_details (char *buffer, int size,
+                                time_t now, time_t since) {
+
+    int cursor;
+    int saved = 0; // On buffer overflow stop at the last complete volume.
+    const char *sep = "";
+
+    cursor = snprintf (buffer, size, "%s", ",\"storage\":{");
+    if (cursor >= size) return 0;
+
+    saved = cursor;
+    int v;
+    for (v = 0; v < HOUSE_MOUNT_MAX; ++v) {
+
+        if (! HouseMountPoints[v].detected) continue;
+
+        struct HouseMountMetrics *metrics = &(HouseMountPoints[v].metrics);
+
+        if (metrics->size == 0) continue; // Ignore pseudo FS without storage.
+
+        cursor += snprintf (buffer+cursor, size-cursor,
+                            "%s\"%s\":{\"size\":[%lld,\"MB\"]",
+                            sep, HouseMountPoints[v].mount, metrics->size);
+        if (cursor >= size) break;
+
+        cursor += houselinux_reduce_details_json
+                     (buffer+cursor, size-cursor, since,
+                      "free", "MB", now,
+                      HOUSE_MOUNT_PERIOD, HOUSE_MOUNT_SPAN,
+                      metrics->timestamps,
+                      metrics->free);
+
+        cursor += snprintf (buffer+cursor, size-cursor, "}");
+        if (cursor >= size) break;
+        saved = cursor;
+        sep = ",";
+    }
+
+    if (saved != cursor) houselog_trace (HOUSE_FAILURE, "BUFFER", "overflow");
+    saved += snprintf (buffer+saved, size-saved, "}");
+    return saved;
+}
+
 static int houselinux_storage_path_match (const char *value, const char *ref) {
     while ((*(ref++) == *(value++)) && (*ref > 0)) ;
     if ((*ref != 0) || ((*value != 0) && (*value != '/'))) return 0;
@@ -180,7 +226,7 @@ static void houselinux_storage_register_mount
    if (changed) {
        int j;
        for (j = HOUSE_MOUNT_SPAN-1; j >= 0; --j)
-           HouseMountPoints[i].metrics.timestamp[j] = 0;
+           HouseMountPoints[i].metrics.timestamps[j] = 0;
    }
 }
 
@@ -287,7 +333,7 @@ void houselinux_storage_background (time_t now) {
         struct HouseMountMetrics *metrics = &(HouseMountPoints[i].metrics);
         metrics->size = houselinux_storage_total (&storage) / (1024 * 1024);
         metrics->free[index] = houselinux_storage_free (&storage) / (1024 * 1024);
-        metrics->timestamp[index] = now;
+        metrics->timestamps[index] = now;
     }
 }
 

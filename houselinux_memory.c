@@ -34,6 +34,8 @@
  *
  *    A function that populates a status overview of the memory usage in JSON.
  *
+ * int houselinux_memory_details (char *buffer, int size, time_t now, time_t since);
+ *    A function that populates a full detail report of the memory usage in JSON.
  */
 
 #include <string.h>
@@ -68,7 +70,7 @@
 // is how much data was swapped out.
 //
 struct HouseMemoryMetrics {
-    time_t timestamp[HOUSE_MEMORY_SPAN];
+    time_t timestamps[HOUSE_MEMORY_SPAN];
     long long memtotal;
     long long memavailable[HOUSE_MEMORY_SPAN];
     long long memdirty[HOUSE_MEMORY_SPAN];
@@ -113,6 +115,48 @@ int houselinux_memory_status (char *buffer, int size) {
                                           "swapped",
                                           HouseMemoryLatest.swapped,
                                           HOUSE_MEMORY_SPAN, "MB");
+        if (cursor >= size) return 0;
+    }
+    cursor += snprintf (buffer+cursor, size-cursor, "}");
+    if (cursor >= size) return 0;
+
+    return cursor;
+}
+
+int houselinux_memory_details (char *buffer, int size,
+                               time_t now, time_t since) {
+
+    if (HouseMemoryLatest.memtotal == 0) return 0; // Nothing to report?
+    int cursor = 0;
+
+    cursor = snprintf (buffer, size,
+                       ",\"memory\":{\"size\":[%lld,\"MB\"]",
+                       HouseMemoryLatest.memtotal);
+    if (cursor >= size) return 0;
+
+    cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor, since,
+                                      "available", "MB", now,
+                                      HOUSE_MEMORY_PERIOD, HOUSE_MEMORY_SPAN,
+                                      HouseMemoryLatest.timestamps,
+                                      HouseMemoryLatest.memavailable);
+
+    cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor, since,
+                                      "dirty", "MB", now,
+                                      HOUSE_MEMORY_PERIOD, HOUSE_MEMORY_SPAN,
+                                      HouseMemoryLatest.timestamps,
+                                      HouseMemoryLatest.memdirty);
+
+    if (HouseMemoryLatest.swaptotal > 0) {
+        cursor += snprintf (buffer+cursor, size-cursor,
+                            ",\"swap\":[%lld,\"MB\"]",
+                            HouseMemoryLatest.swaptotal);
+        if (cursor >= size) return 0;
+
+        cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor, since,
+                                          "swapped", "MB", now,
+                                          HOUSE_MEMORY_PERIOD, HOUSE_MEMORY_SPAN,
+                                          HouseMemoryLatest.timestamps,
+                                          HouseMemoryLatest.swapped);
         if (cursor >= size) return 0;
     }
     cursor += snprintf (buffer+cursor, size-cursor, "}");
@@ -188,6 +232,6 @@ void houselinux_memory_background (time_t now) {
     int index = (now / HOUSE_MEMORY_PERIOD) % HOUSE_MEMORY_SPAN;
 
     houselinux_memory_meminfo (&HouseMemoryLatest, index);
-    HouseMemoryLatest.timestamp[index] = now;
+    HouseMemoryLatest.timestamps[index] = now;
 }
 

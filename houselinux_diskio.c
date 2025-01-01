@@ -33,6 +33,9 @@
  *
  *    A function that populates a status overview of the disk IO in JSON.
  *
+ * int houselinux_diskio_details (char *buffer, int size, time_t now, time_t since);
+ *
+ *    A function that populates a full detail report of the disk IO in JSON.
  */
 
 #include <string.h>
@@ -53,6 +56,7 @@ struct HouseDiskIOMetrics {
     int major;
     int minor;
     char device[16];
+    time_t timestamps[HOUSE_DISKIO_SPAN];
     long long rdrate[HOUSE_DISKIO_SPAN];
     long long wrrate[HOUSE_DISKIO_SPAN];
     long long rdwait[HOUSE_DISKIO_SPAN];
@@ -203,8 +207,70 @@ int houselinux_diskio_status (char *buffer, int size) {
     return cursor;
 }
 
+int houselinux_diskio_details (char *buffer, int size, time_t now, time_t since) {
+
+    int i;
+    int cursor = 0;
+    int start = 0;
+    int startdev = 0;
+    const char *sep = "";
+
+    cursor = snprintf (buffer, size, ",\"disk\":{");
+    if (cursor >= size) return 0;
+    start = cursor;
+
+    for (i = 0; i < HouseDiskIOLatestCount; ++i) {
+        startdev = cursor;
+        cursor += snprintf (buffer+cursor, size-cursor,
+                            "%s\"%s\":",
+                            sep, HouseDiskIOLatest[i].device);
+        if (cursor >= size) break;
+        int startmetrics = cursor;
+
+        cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor, since,
+                                        "rdrate", "r/s", now,
+                                        HOUSE_DISKIO_PERIOD, HOUSE_DISKIO_SPAN,
+                                        HouseDiskIOLatest[i].timestamps,
+                                        HouseDiskIOLatest[i].rdrate);
+        if (cursor >= size) break;
+
+        cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor, since,
+                                        "rdwait", "ms", now,
+                                        HOUSE_DISKIO_PERIOD, HOUSE_DISKIO_SPAN,
+                                        HouseDiskIOLatest[i].timestamps,
+                                        HouseDiskIOLatest[i].rdwait);
+        if (cursor >= size) break;
+
+        cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor, since,
+                                        "wrrate", "w/s", now,
+                                        HOUSE_DISKIO_PERIOD, HOUSE_DISKIO_SPAN,
+                                        HouseDiskIOLatest[i].timestamps,
+                                        HouseDiskIOLatest[i].wrrate);
+        if (cursor >= size) break;
+
+        cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor, since,
+                                        "wrwait", "ms", now,
+                                        HOUSE_DISKIO_PERIOD, HOUSE_DISKIO_SPAN,
+                                        HouseDiskIOLatest[i].timestamps,
+                                        HouseDiskIOLatest[i].wrwait);
+        if (cursor >= size) break;
+
+        if (cursor == startmetrics) {
+            cursor = startdev; // No data to report for this device.
+            continue;
+        }
+        buffer[startmetrics] = '{'; // Overwrite the ','.
+        cursor += snprintf (buffer+cursor, size-cursor, "}");
+        sep = ",";
+    }
+    if (cursor == start) return 0; // No data to report for any device.
+    cursor += snprintf (buffer+cursor, size-cursor, "}");
+    if (cursor >= size) return 0;
+    return cursor;
+}
+
 static void houselinux_diskio_stat (struct HouseDiskIOMetrics *latest,
-                                    int index) {
+                                    int index, time_t now) {
 
     char buffer[1024];
     FILE *f = fopen ("/proc/diskstats", "r");
@@ -272,6 +338,8 @@ static void houselinux_diskio_stat (struct HouseDiskIOMetrics *latest,
         else
             metrics->wrwait[index] = wait / count;
 
+        metrics->timestamps[index] = now;
+
         // Keep a baseline for next time.
         memcpy (metrics->previous, value, sizeof(metrics->previous));
     }
@@ -288,7 +356,7 @@ void houselinux_diskio_background (time_t now) {
 
     if (!firsttime) {
         int index = (now / HOUSE_DISKIO_PERIOD) % HOUSE_DISKIO_SPAN;
-        houselinux_diskio_stat (HouseDiskIOLatest, index);
+        houselinux_diskio_stat (HouseDiskIOLatest, index, now);
     }
 }
 

@@ -31,8 +31,11 @@
  *
  * int houselinux_netio_status (char *buffer, int size);
  *
- *    A function that populates a status overview of the disk IO in JSON.
+ *    A function that populates a status overview of the network IO in JSON.
  *
+ * int houselinux_netio_details (char *buffer, int size, time_t now, time_t since);
+ *
+ *    A function that populates a detailed report of the network IO in JSON.
  */
 
 #include <string.h>
@@ -51,6 +54,7 @@
 
 struct HouseNetIOMetrics {
     char device[16];
+    time_t timestamps[HOUSE_NETIO_SPAN];
     long long rxrate[HOUSE_NETIO_SPAN];
     long long txrate[HOUSE_NETIO_SPAN];
     long long previous[16];
@@ -181,8 +185,55 @@ int houselinux_netio_status (char *buffer, int size) {
     return cursor;
 }
 
+int houselinux_netio_details (char *buffer, int size,
+                              time_t now, time_t since) {
+
+    int i;
+    int cursor = 0;
+    int start = 0;
+    int startdev = 0;
+    const char *sep = "";
+
+    cursor = snprintf (buffer, size, ",\"net\":{");
+    if (cursor >= size) return 0;
+    start = cursor;
+
+    for (i = 0; i < HouseNetIOLatestCount; ++i) {
+        startdev = cursor;
+        cursor += snprintf (buffer+cursor, size-cursor,
+                            "%s\"%s\":",
+                            sep, HouseNetIOLatest[i].device);
+        if (cursor >= size) break;
+        int startmetrics = cursor;
+
+        cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor, since,
+                         "rxrate", "KB/s", now,
+                         HOUSE_NETIO_PERIOD, HOUSE_NETIO_SPAN,
+                         HouseNetIOLatest[i].timestamps,
+                         HouseNetIOLatest[i].rxrate);
+
+        cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor, since,
+                         "txrate", "KB/s", now,
+                         HOUSE_NETIO_PERIOD, HOUSE_NETIO_SPAN,
+                         HouseNetIOLatest[i].timestamps,
+                         HouseNetIOLatest[i].txrate);
+
+        if (cursor == startmetrics) {
+            cursor = startdev; // No data to report for this device.
+            continue;
+        }
+        buffer[startmetrics] = '{'; // Overwrite the ','.
+        cursor += snprintf (buffer+cursor, size-cursor, "}");
+        sep = ",";
+    }
+    if (cursor == start) return 0; // No data to report for any device.
+    cursor += snprintf (buffer+cursor, size-cursor, "}");
+    if (cursor >= size) return 0;
+    return cursor;
+}
+
 static void houselinux_netio_stat (struct HouseNetIOMetrics *latest,
-                                   int index) {
+                                   int index, time_t now) {
 
     char buffer[1024];
     FILE *f = fopen ("/proc/net/dev", "r");
@@ -241,6 +292,8 @@ static void houselinux_netio_stat (struct HouseNetIOMetrics *latest,
         count = value[8] - metrics->previous[8];
         metrics->txrate[index] = (count / 1024) / HOUSE_NETIO_PERIOD;
 
+        metrics->timestamps[index] = now;
+
         // Keep a baseline for next time.
         memcpy (metrics->previous, value, sizeof(metrics->previous));
     }
@@ -257,7 +310,7 @@ void houselinux_netio_background (time_t now) {
 
     if (!firsttime) {
         int index = (now / HOUSE_NETIO_PERIOD) % HOUSE_NETIO_SPAN;
-        houselinux_netio_stat (HouseNetIOLatest, index);
+        houselinux_netio_stat (HouseNetIOLatest, index, now);
     }
 }
 
