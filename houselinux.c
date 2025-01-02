@@ -62,6 +62,9 @@ static char HostName[256];
 
 static time_t HouseStartTime = 0;
 
+static int HouseMetricsStoreEnabled = 1;
+
+
 // Return a compact summary of current metrics.
 // (This function is also called in the background, without a HTTP request.)
 //
@@ -187,8 +190,13 @@ static void houselinux_background (int fd, int mode) {
         }
     }
 
+    // Store metrics data as part of the historical log.
+    // There is an option to not store because some systems are not
+    // performance critical: we still want to monitor them live, but
+    // adding more data to the metrics log would waste storage.
+    //
     static time_t NextMetricsStore = 0;
-    if (now >= NextMetricsStore) {
+    if (HouseMetricsStoreEnabled && (now >= NextMetricsStore)) {
         if (NextMetricsStore == 0) {
             // Synchronize recordings at the 5 minutes mark, so that
             // all machines submit their metrics in a synchronized fashion.
@@ -230,6 +238,11 @@ int main (int argc, const char **argv) {
 
     echttp_default ("-http-service=dynamic");
 
+    int i;
+    for (i = 1; i < argc; ++i) {
+        if (echttp_option_present("-metrics-no-store", argv[i]))
+            HouseMetricsStoreEnabled = 0;
+    }
     argc = echttp_open (argc, argv);
     if (echttp_dynamic_port()) {
         houseportal_initialize (argc, argv);
