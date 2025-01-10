@@ -64,6 +64,8 @@ static time_t HouseStartTime = 0;
 
 static int HouseMetricsStoreEnabled = 1;
 
+static char *HouseOsRelease = 0;
+
 
 // Return a compact summary of current metrics.
 // (This function is also called in the background, without a HTTP request.)
@@ -126,6 +128,49 @@ static const char *houselinux_details (const char *method, const char *uri,
     return buffer;
 }
 
+static const char *houselinux_osrelease (void) {
+
+    // Don't read the file too frequently.
+    if (HouseOsRelease) {
+        if (time(0) % 60) return HouseOsRelease;
+    }
+
+    FILE *f = fopen ("/etc/os-release", "r");
+    if (!f) return HouseOsRelease;
+
+    char buffer[512];
+    while (!feof(f)) {
+        char *line = fgets (buffer, sizeof(buffer), f);
+        if (line[0] < ' ') continue;
+
+        char *eq = strchr (line, '=');
+        if (!eq) continue;
+        *(eq++) = 0;
+        if (strcmp (line, "PRETTY_NAME")) continue;
+
+        char *eol = strchr (eq, '\n');
+        if (eol) *eol = 0;
+
+        if (*eq == '"') {
+            eq += 1;
+            char *end = strrchr (eq, '"');
+            if (end) *end = 0;
+        }
+        if (HouseOsRelease) {
+            if (strcmp (HouseOsRelease, eq)) {
+                free (HouseOsRelease);
+                HouseOsRelease = strdup (eq);
+            }
+        } else {
+            HouseOsRelease = strdup (eq);
+        }
+        break; // Found all that was needed.
+    }
+    fclose (f);
+
+    return HouseOsRelease;
+}
+
 // Return more static information.
 static const char *houselinux_info (const char *method, const char *uri,
                                     const char *data, int length) {
@@ -141,10 +186,13 @@ static const char *houselinux_info (const char *method, const char *uri,
                        HostName, (long long)now);
 
     struct utsname uts;
+    const char *os = houselinux_osrelease();
+    if (!os) os = uts.sysname;
+
     if (!uname (&uts)) {
         cursor += snprintf (buffer+cursor, sizeof(buffer)-cursor,
                             "\"arch\":\"%s\",\"os\":\"%s\",\"version\":\"%s\"",
-                            uts.machine, uts.sysname, uts.version);
+                            uts.machine, os, uts.version);
         if (cursor >= sizeof(buffer)) return 0;
         sep = ",";
     }
