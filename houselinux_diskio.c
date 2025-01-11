@@ -29,6 +29,10 @@
  *
  *    The periodic function that manages the collect of metrics.
  *
+ * int houselinux_diskio_summary (char *buffer, int size);
+ *
+ *    A function that populates a short summary of the disk IO in JSON.
+ *
  * int houselinux_diskio_status (char *buffer, int size);
  *
  *    A function that populates a status overview of the disk IO in JSON.
@@ -205,6 +209,10 @@ int houselinux_diskio_status (char *buffer, int size) {
     cursor += snprintf (buffer+cursor, size-cursor, "}");
     if (cursor >= size) return 0;
     return cursor;
+}
+
+int houselinux_diskio_summary (char *buffer, int size) {
+    return houselinux_diskio_status (buffer, size); // Already the shortest.
 }
 
 int houselinux_diskio_details (char *buffer, int size, time_t now, time_t since) {

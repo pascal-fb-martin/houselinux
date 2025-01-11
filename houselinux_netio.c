@@ -29,6 +29,10 @@
  *
  *    The periodic function that manages the collect of metrics.
  *
+ * int houselinux_netio_summary (char *buffer, int size);
+ *
+ *    A function that populates a short summary of the network IO in JSON.
+ *
  * int houselinux_netio_status (char *buffer, int size);
  *
  *    A function that populates a status overview of the network IO in JSON.
@@ -183,6 +187,10 @@ int houselinux_netio_status (char *buffer, int size) {
     cursor += snprintf (buffer+cursor, size-cursor, "}");
     if (cursor >= size) return 0;
     return cursor;
+}
+
+int houselinux_netio_summary (char *buffer, int size) {
+    return houselinux_netio_status (buffer, size); // Already the shortest.
 }
 
 int houselinux_netio_details (char *buffer, int size,

@@ -21,6 +21,8 @@
  */
 void houselinux_storage_initialize (int argc, const char **argv);
 void houselinux_storage_background (time_t now);
+
+int houselinux_storage_summary (char *buffer, int size);
 int houselinux_storage_status (char *buffer, int size);
 int houselinux_storage_details (char *buffer, int size, time_t now, time_t since);
 

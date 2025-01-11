@@ -22,6 +22,12 @@
  *
  * SYNOPSYS:
  *
+ * void houselinux_reduce_percentage (long long reference, int count,
+ *                                    long long *in, long long *out);
+ *
+ *    Convert a set of metrics from their original unit to percentages,
+ *    where the value of reference represent the 100% point.
+ *
  * int houselinux_reduce_json (char *buffer, int size,
  *                             const char *name,
  *                             long long *values, int count, const char *unit);
@@ -62,6 +68,14 @@ static int houselinux_reduce_compare (const void *p1, const void *p2) {
     long long diff = *(long long *)p1 - *(long long *)p2;
     if (diff != 0) return (diff < 0)? -1 : 1;
     return 0;
+}
+
+void houselinux_reduce_percentage (long long reference, int count,
+                                   long long *in, long long *out) {
+
+    while (count-- > 0) {
+        *(out++) = ((*(in++)) * 100) / reference;
+    }
 }
 
 int houselinux_reduce_json (char *buffer, int size,

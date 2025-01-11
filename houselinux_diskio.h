@@ -21,6 +21,8 @@
  */
 void houselinux_diskio_initialize (int argc, const char **argv);
 void houselinux_diskio_background (time_t now);
+
+int houselinux_diskio_summary (char *buffer, int size);
 int houselinux_diskio_status (char *buffer, int size);
 int houselinux_diskio_details (char *buffer, int size, time_t now, time_t since);
 

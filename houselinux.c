@@ -67,7 +67,32 @@ static int HouseMetricsStoreEnabled = 1;
 static char *HouseOsRelease = 0;
 
 
-// Return a compact summary of current metrics.
+// Return a short summary of current metrics.
+// In order to reduce the size, all metrics are expressed in percentages.
+// (This function is also called in the background, without a HTTP request.)
+//
+static const char *houselinux_summary (const char *method, const char *uri,
+                                      const char *data, int length) {
+    static char buffer[65537];
+    int cursor;
+    time_t now = time(0);
+
+    cursor = snprintf (buffer, sizeof(buffer),
+                       "{\"host\":\"%s\","
+                           "\"timestamp\":%lld,\"metrics\":{\"period\":300",
+                       HostName, (long long)now);
+
+    cursor += houselinux_cpu_summary (buffer+cursor, sizeof(buffer)-cursor);
+    cursor += houselinux_memory_summary (buffer+cursor, sizeof(buffer)-cursor);
+    cursor += houselinux_storage_summary (buffer+cursor, sizeof(buffer)-cursor);
+    cursor += houselinux_diskio_summary (buffer+cursor, sizeof(buffer)-cursor);
+    cursor += houselinux_netio_summary (buffer+cursor, sizeof(buffer)-cursor);
+    snprintf (buffer+cursor, sizeof(buffer)-cursor, "}}");
+    if (uri) echttp_content_type_json ();
+    return buffer;
+}
+
+// Return a compact report of current metrics.
 // (This function is also called in the background, without a HTTP request.)
 //
 static const char *houselinux_status (const char *method, const char *uri,
@@ -308,6 +333,7 @@ int main (int argc, const char **argv) {
     houselinux_diskio_initialize (argc, argv);
     houselinux_netio_initialize (argc, argv);
 
+    echttp_route_uri ("/metrics/summary", houselinux_summary);
     echttp_route_uri ("/metrics/status", houselinux_status);
     echttp_route_uri ("/metrics/info", houselinux_info);
     echttp_route_uri ("/metrics/details", houselinux_details);

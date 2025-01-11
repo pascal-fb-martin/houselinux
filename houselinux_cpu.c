@@ -29,6 +29,10 @@
  *
  *    The periodic function that manages the collect of metrics.
  *
+ * int houselinux_cpu_summary (char *buffer, int size);
+ *
+ *    A function that populates a short summary of the CPU usage in JSON.
+ *
  * int houselinux_cpu_status (char *buffer, int size);
  *
  *    A function that populates a compact status of the CPU usage in JSON.
@@ -112,6 +116,10 @@ int houselinux_cpu_status (char *buffer, int size) {
     if (cursor >= size) return 0;
 
     return cursor;
+}
+
+int houselinux_cpu_summary (char *buffer, int size) {
+    return houselinux_cpu_status (buffer, size); // Already the shortest.
 }
 
 int houselinux_cpu_details (char *buffer, int size, time_t now, time_t since) {

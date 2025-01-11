@@ -30,6 +30,10 @@
  *
  *    The periodic function that manages the metrics collection.
  *
+ * int houselinux_memory_summary (char *buffer, int size);
+ *
+ *    A function that populates a short summary of the memory usage in JSON.
+ *
  * int houselinux_memory_status (char *buffer, int size);
  *
  *    A function that populates a status overview of the memory usage in JSON.
@@ -83,6 +87,48 @@ static struct HouseMemoryMetrics HouseMemoryLatest;
 
 void houselinux_memory_initialize (int argc, const char **argv) {
     // TBD
+}
+
+int houselinux_memory_summary (char *buffer, int size) {
+
+    if (HouseMemoryLatest.memtotal == 0) return 0; // Nothing to report?
+    int cursor = 0;
+
+    cursor = snprintf (buffer, size, ",\"memory\":");
+    if (cursor >= size) return 0;
+    int start = cursor;
+
+    long long percentage[HOUSE_MEMORY_SPAN];
+
+    houselinux_reduce_percentage (HouseMemoryLatest.memtotal, HOUSE_MEMORY_SPAN,
+                                  HouseMemoryLatest.memavailable, percentage);
+
+    cursor += houselinux_reduce_json (buffer+cursor, size-cursor,
+                                      "available", percentage,
+                                      HOUSE_MEMORY_SPAN, "%");
+
+    houselinux_reduce_percentage (HouseMemoryLatest.memtotal, HOUSE_MEMORY_SPAN,
+                                  HouseMemoryLatest.memdirty, percentage);
+
+    cursor += houselinux_reduce_json (buffer+cursor, size-cursor,
+                                      "dirty", percentage,
+                                      HOUSE_MEMORY_SPAN, "%");
+
+    if (HouseMemoryLatest.swaptotal > 0) {
+        houselinux_reduce_percentage (HouseMemoryLatest.swaptotal,
+                                      HOUSE_MEMORY_SPAN,
+                                      HouseMemoryLatest.swapped, percentage);
+
+        cursor += houselinux_reduce_json (buffer+cursor, size-cursor,
+                                          "swapped", percentage,
+                                          HOUSE_MEMORY_SPAN, "%");
+        if (cursor >= size) return 0;
+    }
+    buffer[start] = '{'; // Overwrite the first ','.
+    cursor += snprintf (buffer+cursor, size-cursor, "}");
+    if (cursor >= size) return 0;
+
+    return cursor;
 }
 
 int houselinux_memory_status (char *buffer, int size) {

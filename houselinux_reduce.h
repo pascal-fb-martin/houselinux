@@ -20,6 +20,9 @@
  * houselinux_reduce.h - Generate quantil representations of metrics series.
  */
 
+void houselinux_reduce_percentage (long long reference, int count,
+                                   long long *in, long long *out);
+
 int houselinux_reduce_json (char *buffer, int size,
                             const char *name,
                             long long *values, int count, const char *unit);

@@ -30,6 +30,10 @@
  *
  *    The periodic function that manages the metrics collection.
  *
+ * int houselinux_storage_summary (char *buffer, int size);
+ *
+ *    A function that populates a short summary of the storage in JSON.
+ *
  * int houselinux_storage_status (char *buffer, int size);
  *
  *    A function that populates a status overview of the storage in JSON.
@@ -100,6 +104,54 @@ static long long houselinux_storage_free (const struct statvfs *fs) {
 
 static long long houselinux_storage_total (const struct statvfs *fs) {
     return (long long)(fs->f_blocks) * fs->f_frsize;
+}
+
+int houselinux_storage_summary (char *buffer, int size) {
+
+    int cursor;
+    int saved = 0; // On buffer overflow stop at the last complete volume.
+    const char *sep = "";
+
+    cursor = snprintf (buffer, size, "%s", ",\"storage\":{");
+    if (cursor >= size) return 0;
+
+    saved = cursor;
+    int v;
+    for (v = 0; v < HOUSE_MOUNT_MAX; ++v) {
+
+        if (! HouseMountPoints[v].detected) continue;
+
+        struct HouseMountMetrics *metrics = &(HouseMountPoints[v].metrics);
+
+        if (metrics->size == 0) continue; // Ignore pseudo FS without storage.
+
+        cursor += snprintf (buffer+cursor, size-cursor,
+                            "%s\"%s\":", sep, HouseMountPoints[v].mount);
+        if (cursor >= size) break;
+
+        long long percentage[HOUSE_MOUNT_SPAN];
+
+        houselinux_reduce_percentage (metrics->size, HOUSE_MOUNT_SPAN,
+                                      metrics->free, percentage);
+
+        int start = cursor;
+        cursor += houselinux_reduce_json (buffer+cursor, size-cursor,
+                                          "free", percentage,
+                                          HOUSE_MOUNT_SPAN, "%");
+        if (cursor > start)
+            buffer[start] = '{'; // overwrite the initial ','.
+        else
+            cursor += snprintf (buffer+cursor, size-cursor, "{"); // Empty.
+
+        cursor += snprintf (buffer+cursor, size-cursor, "}");
+        if (cursor >= size) break;
+        saved = cursor;
+        sep = ",";
+    }
+
+    if (saved != cursor) houselog_trace (HOUSE_FAILURE, "BUFFER", "overflow");
+    saved += snprintf (buffer+saved, size-saved, "}");
+    return saved;
 }
 
 int houselinux_storage_status (char *buffer, int size) {
