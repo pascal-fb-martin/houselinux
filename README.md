@@ -1,5 +1,5 @@
-# HouseMotion
-The house Motion sidekick service.
+# HouseLinux
+The House service to log Linux performance metrics.
 
 ## Overview
 
@@ -35,7 +35,7 @@ HouseLinux is still fairly new. The list of metrics recorded may change signific
 ## Installation
 
 This service depends on the House series environment:
-* Install git, icoutils, openssl (libssl-dev), motion.
+* Install git, icoutils, openssl (libssl-dev).
 * configure the motion software (see later).
 * Install [echttp](https://github.com/pascal-fb-martin/echttp)
 * Install [houseportal](https://github.com/pascal-fb-martin/houseportal)
