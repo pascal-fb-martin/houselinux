@@ -5,6 +5,8 @@ The House service to log Linux performance metrics.
 
 This service aggregates activity and performance metrics from the local Linux system: RAM, storage and CPU usage. It implement the House metrics web API.
 
+See the [gallery](https://github.com/pascal-fb-martin/houselinux/blob/main/gallery/README.md) for a view of the associated web UI.
+
 The author was using Cockpit as a convenient way to access an overview of his 10 to 15 small computers (cheap Raspberyy Pi and used-market Mini PC systems) and was looking for a way to continuously record some performance metrics.
 
 The Cockpit project apparently pivoted to a management-only focus and removed the overview part. (This monitoring portion was good for a home lab, but continuous monitoring would have been costly..).
