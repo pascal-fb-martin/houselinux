@@ -21,16 +21,19 @@ The goal of Houselinux is to gather an extensive set of OS metrics, and report t
 * Use little CPU.
 * Have a small memory footprint.
 * Generate compact data.
+* Log data 24/7 for later incident troubleshooting. The storage itself is handled by [housesaga](https://github.com/pascal-fb-martin/housesaga).
 
-The later goal leads to a choice of reporting quantile data at low frequency. The most basic quantile data is the set min and max. The min and max values give you and idea of the value fluctuations, but no idea about how the sampled values are spread within the interval. A slightly less basic set is min, median, max. The addition of a median value provides an indication of the values being centered or overall biased toward the min or max. Adding quartiles would give an indication of the values being either concentrated around the median, the min or max, or else evenly spread. Each addition add to the quality of the information, but exponentially increases both the computational and storage cost. The plan is to adjust based on experience. A different quality level might be needed metric by metric.
-
-This service is not intended to have a user interface. The existing web pages are for maintenance and troubleshooting only. This is meant to collect metrics, and the visualization part might make use of tools like Grafana.
+This service is not intended to have a user interface. The existing web pages are for maintenance and troubleshooting only. This is meant to collect metrics, and the visualization part will be done elsewhere, mostly.
 
 The web API implemented by HouseLinux is meant to be mostly independent from Linux or Unix, even while some data (e.g. load average) might not exist on other OSes.
 
-## Warning
+Visualization of real time data is done through (houseportal)(https://github.com/pascal-fb-martin/houseportal). Visualization of historical data is done through [housesaga](https://github.com/pascal-fb-martin/housesaga).
+
+## Warnings
 
 HouseLinux is still fairly new. The list of metrics recorded may change significantly in the near future.
+
+There is no access security. This tool is meant to be used on a local, secure, network only. That is why there is no mechanism for system administration, like Cockpit does.
 
 ## Installation
 
@@ -39,9 +42,20 @@ This service depends on the House series environment:
 * configure the motion software (see later).
 * Install [echttp](https://github.com/pascal-fb-martin/echttp)
 * Install [houseportal](https://github.com/pascal-fb-martin/houseportal)
+* It is recommended to install [housesaga](https://github.com/pascal-fb-martin/housesaga) somewhere on the local network, preferably on a file server (logs may become large, and constant write access might not be good for SD cards).
 * Clone this repository.
 * make rebuild
 * sudo make install
+
+## Data Design
+
+The "compact" goal is meants to generate logs of a reasonable size for a home system. That did lead to a choice of reporting quantile data at low frequency.
+
+The most basic quantile data is the set min and max. The min and max values give you and idea of the value fluctuations, but no idea about how the sampled values are spread within the interval.
+
+A slightly less basic set is min, median, max. The addition of a median value provides an indication of the values being centered or overall biased toward the min or max.
+
+Adding quartiles (min, 25% percentile, median, 75% percentile, max) would give an indication of the values being either concentrated around the median, the min or max, or else evenly spread. Each addition add to the quality of the information, but exponentially increases both the computational and storage cost. The plan is to adjust based on experience. A different quality level might be used metric by metric, depending on needs.
 
 ## Web API
 
