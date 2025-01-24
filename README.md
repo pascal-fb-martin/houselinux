@@ -27,7 +27,7 @@ This service is not intended to have a user interface. The existing web pages ar
 
 The web API implemented by HouseLinux is meant to be mostly independent from Linux or Unix, even while some data (e.g. load average) might not exist on other OSes.
 
-Visualization of real time data is done through (houseportal)(https://github.com/pascal-fb-martin/houseportal). Visualization of historical data is done through [housesaga](https://github.com/pascal-fb-martin/housesaga).
+Visualization of real time data is done through [houseportal](https://github.com/pascal-fb-martin/houseportal). Visualization of historical data is done through [housesaga](https://github.com/pascal-fb-martin/housesaga).
 
 ## Warnings
 
