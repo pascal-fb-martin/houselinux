@@ -196,6 +196,8 @@ static const char *houselinux_osrelease (void) {
     return HouseOsRelease;
 }
 
+#define MEGABYTE (1024 * 1024)
+
 // Return more static information.
 static const char *houselinux_info (const char *method, const char *uri,
                                     const char *data, int length) {
@@ -224,9 +226,16 @@ static const char *houselinux_info (const char *method, const char *uri,
 
     struct sysinfo info;
     if (!sysinfo(&info)) {
+        long long totalram =
+            ((long long)(info.totalram) * info.mem_unit) / MEGABYTE;
+        const char *unit = "MB";
+        if (totalram > 1024) {
+            totalram /= 1024;
+            unit = "GB";
+        }
         cursor += snprintf (buffer+cursor, sizeof(buffer)-cursor,
-                            "%s\"boot\":%lld",
-                            sep, (long long)now - info.uptime);
+                            "%s\"ram\":{\"size\":%lld,\"unit\":\"%s\"},\"boot\":%lld",
+                            sep, totalram, unit, (long long)now - info.uptime);
         if (cursor >= sizeof(buffer)) return 0;
         sep = ",";
     }
@@ -245,12 +254,8 @@ static const char *houselinux_info (const char *method, const char *uri,
 
 static void houselinux_background (int fd, int mode) {
 
-    static time_t LastCall = 0;
-    time_t now = time(0);
-    if (LastCall >= now) return; // Run only once per second.
-    LastCall = now;
-
     static time_t LastRenewal = 0;
+    time_t now = time(0);
 
     if (use_houseportal) {
         static const char *path[] = {"metrics:/metrics"};
