@@ -197,6 +197,7 @@ static const char *houselinux_osrelease (void) {
 }
 
 #define MEGABYTE (1024 * 1024)
+#define GIGABYTE (1024 * 1024 * 1024)
 
 // Return more static information.
 static const char *houselinux_info (const char *method, const char *uri,
@@ -226,12 +227,14 @@ static const char *houselinux_info (const char *method, const char *uri,
 
     struct sysinfo info;
     if (!sysinfo(&info)) {
-        long long totalram =
-            ((long long)(info.totalram) * info.mem_unit) / MEGABYTE;
         const char *unit = "MB";
-        if (totalram > 1024) {
-            totalram /= 1024;
+        long long totalram = ((long long)(info.totalram) * info.mem_unit);
+        // Adjust the unit and round up.
+        if (totalram > GIGABYTE) {
+            totalram = (totalram + GIGABYTE - 1) / GIGABYTE;
             unit = "GB";
+        } else {
+            totalram = (totalram + MEGABYTE - 1) / MEGABYTE;
         }
         cursor += snprintf (buffer+cursor, sizeof(buffer)-cursor,
                             "%s\"ram\":{\"size\":%lld,\"unit\":\"%s\"},\"boot\":%lld",
