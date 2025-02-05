@@ -318,6 +318,7 @@ int main (int argc, const char **argv) {
     gethostname (HostName, sizeof(HostName));
 
     echttp_default ("-http-service=dynamic");
+    echttp_static_default ("-http-root=/usr/local/share/house/public");
 
     int i;
     for (i = 1; i < argc; ++i) {
@@ -329,6 +330,8 @@ int main (int argc, const char **argv) {
         houseportal_initialize (argc, argv);
         use_houseportal = 1;
     }
+    echttp_static_initialize (argc, argv);
+
     housediscover_initialize (argc, argv);
     houselog_initialize ("metrics", argc, argv);
 
@@ -345,7 +348,6 @@ int main (int argc, const char **argv) {
     echttp_route_uri ("/metrics/status", houselinux_status);
     echttp_route_uri ("/metrics/info", houselinux_info);
     echttp_route_uri ("/metrics/details", houselinux_details);
-    echttp_static_route ("/", "/usr/local/share/house/public");
 
     echttp_background (&houselinux_background);
 
