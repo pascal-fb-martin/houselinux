@@ -43,7 +43,7 @@ rebuild: clean all
 	gcc -c -Wall -g -O -o $@ $<
 
 houselinux: $(OBJS)
-	gcc -g -O -o houselinux $(OBJS) -lhouseportal -lechttp -lssl -lcrypto -lgpiod -lrt
+	gcc -g -O -o houselinux $(OBJS) -lhouseportal -lechttp -lssl -lcrypto -lrt
 
 # Distribution agnostic file installation -----------------------
 
