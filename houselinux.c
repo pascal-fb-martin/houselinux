@@ -64,8 +64,6 @@ static time_t HouseStartTime = 0;
 
 static int HouseMetricsStoreEnabled = 1;
 
-static char *HouseOsRelease = 0;
-
 
 // Return a short summary of current metrics.
 // In order to reduce the size, all metrics are expressed in percentages.
@@ -155,10 +153,15 @@ static const char *houselinux_details (const char *method, const char *uri,
 
 static const char *houselinux_osrelease (void) {
 
+    static char HouseOsRelease[128] = {0};
+    static time_t NextRead = 0;
+
     // Don't read the file too frequently.
-    if (HouseOsRelease) {
-        if (time(0) % 60) return HouseOsRelease;
+    time_t now = time(0);
+    if (HouseOsRelease[0]) {
+        if (now < NextRead) return HouseOsRelease;
     }
+    NextRead = now + 60;
 
     FILE *f = fopen ("/etc/os-release", "r");
     if (!f) return HouseOsRelease;
@@ -181,13 +184,8 @@ static const char *houselinux_osrelease (void) {
             char *end = strrchr (eq, '"');
             if (end) *end = 0;
         }
-        if (HouseOsRelease) {
-            if (strcmp (HouseOsRelease, eq)) {
-                free (HouseOsRelease);
-                HouseOsRelease = strdup (eq);
-            }
-        } else {
-            HouseOsRelease = strdup (eq);
+        if (strcmp (HouseOsRelease, eq)) {
+            snprintf (HouseOsRelease, sizeof(HouseOsRelease), "%s", eq);
         }
         break; // Found all that was needed.
     }
