@@ -188,7 +188,7 @@ function showInfo (data) {
    line.appendChild(textColumn (info.arch));
    line.appendChild(textColumn (info.cores));
    line.appendChild(textColumn (info.os));
-   line.appendChild(textColumn (info.release));
+   line.appendChild(textColumn (info.kernel));
    if (!info.cores) info.cores = 1;
    table.appendChild(line);
 }

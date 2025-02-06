@@ -217,7 +217,7 @@ static const char *houselinux_info (const char *method, const char *uri,
 
     if (!uname (&uts)) {
         cursor += snprintf (buffer+cursor, sizeof(buffer)-cursor,
-                            "\"arch\":\"%s\",\"os\":\"%s\",\"release\":\"%s\"",
+                            "\"arch\":\"%s\",\"os\":\"%s\",\"kernel\":\"%s\"",
                             uts.machine, os, uts.release);
         if (cursor >= sizeof(buffer)) return 0;
         sep = ",";
