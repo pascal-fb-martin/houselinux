@@ -186,10 +186,10 @@ function showInfo (data) {
    line.appendChild(column);
 
    line.appendChild(textColumn (info.arch));
-   line.appendChild(textColumn (info.os));
-   line.appendChild(textColumn (info.version));
-   if (!info.cores) info.cores = 1;
    line.appendChild(textColumn (info.cores));
+   line.appendChild(textColumn (info.os));
+   line.appendChild(textColumn (info.release));
+   if (!info.cores) info.cores = 1;
    table.appendChild(line);
 }
 
@@ -249,12 +249,12 @@ window.onload = function() {
    <h1>System Information</h1>
    <table class="housewidetable sysinfo" border="0">
       <tr>
-         <th width="10%">HOST</th>
+         <th width="15%">HOST</th>
          <th width="15%">BOOT</th>
          <th width="10%">CPU</th>
+         <th width="10%">CORES</th>
          <th width="25%">OS</th>
-         <th width="35%">VERSION</th>
-         <th width="5%">CORES</th>
+         <th width="25%">KERNEL</th>
       </tr>
    </table>
    </p>
