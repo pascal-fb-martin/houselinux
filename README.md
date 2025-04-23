@@ -41,7 +41,6 @@ There is no access security. This tool is meant to be used on a local, secure, n
 
 This service depends on the House series environment:
 * Install git, icoutils, openssl (libssl-dev).
-* configure the motion software (see later).
 * Install [echttp](https://github.com/pascal-fb-martin/echttp)
 * Install [houseportal](https://github.com/pascal-fb-martin/houseportal)
 * It is recommended to install [housesaga](https://github.com/pascal-fb-martin/housesaga) somewhere on the local network, preferably on a file server (logs may become large, and constant write access might not be good for SD cards).
