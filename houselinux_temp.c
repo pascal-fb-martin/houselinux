@@ -89,7 +89,9 @@ void houselinux_temp_initialize (int argc, const char **argv) {
             is_cpu = 1;
         } else if (!strcmp (line, "coretemp")) {    // Intel.
             is_cpu = 1;
-        } else if (!strcmp (line, "amdgpu")) {      // AMD Radeon.
+        } else if (!strcmp (line, "amdgpu")) {      // AMD Radeon GPU.
+            is_gpu = 1;
+        } else if (!strcmp (line, "radeon")) {      // Old AMD Radeon driver.
             is_gpu = 1;
         }
         if (is_cpu) {
