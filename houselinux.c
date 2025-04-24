@@ -56,6 +56,7 @@
 #include "houselinux_storage.h"
 #include "houselinux_diskio.h"
 #include "houselinux_netio.h"
+#include "houselinux_temp.h"
 
 static int use_houseportal = 0;
 static char HostName[256];
@@ -85,6 +86,7 @@ static const char *houselinux_summary (const char *method, const char *uri,
     cursor += houselinux_storage_summary (buffer+cursor, sizeof(buffer)-cursor);
     cursor += houselinux_diskio_summary (buffer+cursor, sizeof(buffer)-cursor);
     cursor += houselinux_netio_summary (buffer+cursor, sizeof(buffer)-cursor);
+    cursor += houselinux_temp_summary (buffer+cursor, sizeof(buffer)-cursor);
     snprintf (buffer+cursor, sizeof(buffer)-cursor, "}}");
     if (uri) echttp_content_type_json ();
     return buffer;
@@ -109,6 +111,7 @@ static const char *houselinux_status (const char *method, const char *uri,
     cursor += houselinux_storage_status (buffer+cursor, sizeof(buffer)-cursor);
     cursor += houselinux_diskio_status (buffer+cursor, sizeof(buffer)-cursor);
     cursor += houselinux_netio_status (buffer+cursor, sizeof(buffer)-cursor);
+    cursor += houselinux_temp_status (buffer+cursor, sizeof(buffer)-cursor);
     snprintf (buffer+cursor, sizeof(buffer)-cursor, "}}");
     if (uri) echttp_content_type_json ();
     return buffer;
@@ -146,6 +149,7 @@ static const char *houselinux_details (const char *method, const char *uri,
     c += houselinux_storage_details (buffer+c, sizeof(buffer)-c, now, since);
     c += houselinux_diskio_details (buffer+c, sizeof(buffer)-c, now, since);
     c += houselinux_netio_details (buffer+c, sizeof(buffer)-c, now, since);
+    c += houselinux_temp_details (buffer+c, sizeof(buffer)-c, now, since);
     snprintf (buffer+c, sizeof(buffer)-c, "}}");
     echttp_content_type_json ();
     return buffer;
@@ -293,6 +297,7 @@ static void houselinux_background (int fd, int mode) {
     houselinux_storage_background(now);
     houselinux_diskio_background(now);
     houselinux_netio_background(now);
+    houselinux_temp_background(now);
 
     housediscover (now);
     houselog_background (now);
@@ -341,6 +346,7 @@ int main (int argc, const char **argv) {
     houselinux_storage_initialize (argc, argv);
     houselinux_diskio_initialize (argc, argv);
     houselinux_netio_initialize (argc, argv);
+    houselinux_temp_initialize (argc, argv);
 
     echttp_route_uri ("/metrics/summary", houselinux_summary);
     echttp_route_uri ("/metrics/status", houselinux_status);

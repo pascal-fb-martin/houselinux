@@ -48,6 +48,24 @@ function revertQuantile (data, base) {
     return result;
 }
 
+function toCelcius (data) {
+    if (data[data.length-1] != 'mC') return data;
+    var base = 1000.0;
+    var result = [...data];
+    result[0] = data[0] / base;
+    if (data.length == 2) {
+        result[1] = 'C';
+    } else if (data.length == 3) {
+        result[1] = data[1] / base;
+        result[2] = 'C';
+    } else if (data.length == 4) {
+        result[1] = data[1] / base;
+        result[2] = data[2] / base;
+        result[3] = 'C';
+    }
+    return result;
+}
+
 function toPercentage (data, base) {
     var result = [...data];
     if (data.length == 2) {
@@ -168,6 +186,25 @@ function listNetIO (data) {
    }
 }
 
+function listTemperatures (data) {
+   var table = wipeout ('temperatures');
+
+   if (! data.metrics.temp) return;
+
+   var temp = data.metrics.temp;
+
+   var line = document.createElement("tr");
+   if (temp.cpu)
+       line.appendChild(quantileColumn (toCelcius(temp.cpu)));
+   else
+       line.appendChild(textColumn (''));
+   if (temp.gpu)
+       line.appendChild(quantileColumn (toCelcius(temp.gpu)));
+   else
+       line.appendChild(textColumn (''));
+   table.appendChild(line);
+}
+
 function showInfo (data) {
    var table = document.getElementsByClassName ('sysinfo')[0];
 
@@ -201,6 +238,7 @@ function showAll (data) {
    listStorage(data);
    listDiskIO(data);
    listNetIO(data);
+   listTemperatures(data);
 }
 
 function getInfo () {
@@ -322,6 +360,17 @@ window.onload = function() {
          <th width="40%">NETWORK</th>
          <th width="30%">RECEIVE</th>
          <th width="30%">TRANSMIT</th>
+      </tr>
+   </table>
+   </p>
+   <br>
+   <br>
+   <p>
+   <h1>Temperatures</h1>
+   <table class="housewidetable temperatures" border="0">
+      <tr>
+         <th width="50%">CPU</th>
+         <th width="50%">GPU</th>
       </tr>
    </table>
    </p>

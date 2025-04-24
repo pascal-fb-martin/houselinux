@@ -89,6 +89,9 @@ This endpoint returns a complete set of metrics, as a JSON object defined as fol
 * metrics.net: all network I/O related metrics (see below).
 * metrics.net._device_.rxrate: receive traffic in KByte per second.
 * metrics.net._device_.txrate: transmit traffic in KByte per second.
+* metrics.temp: data from all supported temperature sensors. May not be present.
+* metrics.temp.cpu: main CPU temperature sensor, regardless of the number of cores.
+* metrics.temp.gpu: main GPU temperature sensor. May not be present.
 
 An individual metric is an array of 2, 3 or 4 elements, typically:
 * If the array has 2 elements, the format is: value, unit.
@@ -147,4 +150,14 @@ The following is currently implemented:
 * Metrics are periodically pushed to all detected log services for permanent storage, in the same JSON format as returned by the /metrics/status endpoint.
 
 * uname(2), sysinfo(2) and sysconf(2) are used to retrieve system information.
+
+* CPU temperature is recovered from directory /sys/class/hwmon/hwmonN, where N is 0, 1, 2, etc.
+
+AMD: file "name" contains "k10temp", CPU temperature in file "temp1_input".
+
+Raspberry Pi: file "name" contains "cpu_thermal", CPU temperature in file "temp1_input".
+
+Intel: file "name" contains "coretemp", package temperature in file "temp1_input". (Files temp2_input, temp3_input, etc. contain each individual core temperature.)
+
+All temperatures are in milli Celcius.
 
