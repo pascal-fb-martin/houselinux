@@ -143,8 +143,19 @@ void houselinux_diskio_initialize (int argc, const char **argv) {
         while (*(++line) > ' ') ;
         *line = 0;
 
-        // Ignore partitions and loops.
-        if (isdigit(device[strlen(device)-1])) continue;
+        // Filter pseudo devices: we are only interested in traffic
+        // for real physical devices.
+        // TBD: use a better criteria than this name pattern matching.
+
+        // Ignore vitual devices: RAM, loop:
+        if (!strncmp (device, "loop", 4)) continue; // loop[0-9]*
+        if (!strncmp (device, "ram", 3)) continue; // ram[0-9]*
+
+        // Ignore disk and SD card partitions
+        if ((!strncmp (device, "sd", 2)) &&
+            isdigit(device[strlen(device)-1])) continue; // sd[a-z][0-9]
+        if ((!strncmp (device, "mmcblk", 6)) &&
+            strchr (device+6, 'p')) continue; // mmcblk[0-9]p[0-9]
 
         int index = houselinux_diskio_add (major, minor, device);
         struct HouseDiskIOMetrics *metrics = HouseDiskIOLatest + index;
