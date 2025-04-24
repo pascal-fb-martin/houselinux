@@ -144,7 +144,7 @@ int houselinux_temp_details (char *buffer, int size, time_t now, time_t since) {
 
     int cursor = 0;
 
-    cursor = snprintf (buffer, size, ",\"cpu\":");
+    cursor = snprintf (buffer, size, ",\"temp\":");
     if (cursor >= size) return 0;
 
     int start = cursor;
@@ -160,7 +160,7 @@ int houselinux_temp_details (char *buffer, int size, time_t now, time_t since) {
 
     if (HouseTempGpuPath[0]) {
         cursor += houselinux_reduce_details_json (buffer+cursor, size-cursor,
-                                                  since, "iowait", "mC", now,
+                                                  since, "gpu", "mC", now,
                                                   HOUSE_TEMP_PERIOD, HOUSE_TEMP_SPAN,
                                                   HouseTempLatest.timestamp,
                                                   HouseTempLatest.gpu);
