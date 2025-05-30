@@ -58,7 +58,6 @@
 #include "houselinux_netio.h"
 #include "houselinux_temp.h"
 
-static int use_houseportal = 0;
 static char HostName[256];
 
 static time_t HouseStartTime = 0;
@@ -259,19 +258,9 @@ static const char *houselinux_info (const char *method, const char *uri,
 
 static void houselinux_background (int fd, int mode) {
 
-    static time_t LastRenewal = 0;
     time_t now = time(0);
 
-    if (use_houseportal) {
-        static const char *path[] = {"metrics:/metrics"};
-        if (now >= LastRenewal + 60) {
-            if (LastRenewal > 0)
-                houseportal_renew();
-            else
-                houseportal_register (echttp_port(4), path, 1);
-            LastRenewal = now;
-        }
-    }
+    houseportal_background (now);
 
     // Store metrics data as part of the historical log.
     // There is an option to not store because some systems are not
@@ -330,8 +319,9 @@ int main (int argc, const char **argv) {
     }
     argc = echttp_open (argc, argv);
     if (echttp_dynamic_port()) {
+        static const char *path[] = {"metrics:/metrics"};
         houseportal_initialize (argc, argv);
-        use_houseportal = 1;
+        houseportal_declare (echttp_port(4), path, 1);
     }
     echttp_static_initialize (argc, argv);
 
