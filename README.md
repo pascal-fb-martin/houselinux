@@ -12,6 +12,7 @@ The author was using Cockpit as a convenient way to access an overview of his 10
 The Cockpit project apparently pivoted to a management-only focus and removed the overview part. (This monitoring portion was good for a home lab, but continuous monitoring would have been costly..).
 
 After trying multiple monitoring systems, it seems that there is no general metric recording solution compatible with small systems:
+
 * Command line tools typically specialize in one area (CPU or IO). These are usually not optimized for constant recording. Running them continuously may tax the local system (CPU and storage), especially on small computers with micro SD cards or EMMC storage.
 * "Traditional" open source monitoring tools tend to focus on raising up/down alerts rather than collecting data for performance analysis. When they collect performance data, the advice is to limit the amount for performance reasons (see Nagios).
 * "Cloud generation" open source monitoring tools tend to be memory hogs (see Prometheus).
@@ -20,6 +21,7 @@ After trying multiple monitoring systems, it seems that there is no general metr
 It was time to get some fun with a simple more home-grown monitoring solution.
 
 The goal of Houselinux is to gather an extensive set of OS metrics, and report them to external monitoring and logging systems. The objective is to:
+
 * Use little CPU.
 * Have a small memory footprint.
 * Generate compact data.
@@ -40,6 +42,7 @@ There is no access security. This tool is meant to be used on a local, secure, n
 ## Installation
 
 This service depends on the House series environment:
+
 * Install git, icoutils, openssl (libssl-dev).
 * Install [echttp](https://github.com/pascal-fb-martin/echttp)
 * Install [houseportal](https://github.com/pascal-fb-martin/houseportal)
@@ -64,6 +67,7 @@ Adding quartiles (min, 25% percentile, median, 75% percentile, max) would give a
 GET /metrics/status
 ```
 This endpoint returns a complete set of metrics, as a JSON object defined as follows:
+
 * host: the name of the server running this service.
 * timestamp: the time of the request/response.
 * metrics.period: the sampling period used by this service. The client should poll periodically using this value.
@@ -94,6 +98,7 @@ This endpoint returns a complete set of metrics, as a JSON object defined as fol
 * metrics.temp.gpu: main GPU temperature sensor. May not be present.
 
 An individual metric is an array of 2, 3 or 4 elements, typically:
+
 * If the array has 2 elements, the format is: value, unit.
 * If the array has 3 elements, the format is: min, max, unit.
 * If the array has 4 elements, the format is: min, median, max, unit.
@@ -114,6 +119,7 @@ GET /metrics/details?since=TIMESTAMP
 ```
 
 This endpoint returns the same list of metrics as /metrics/status, but with full details, i.e. in time series instead of quantile summary form. The JSON object is named "Metrics" instead of "metrics", and contains two more items:
+
 * Metrics.start: the time of the first recorded metrics in each series.
 * Metrics.period: the time span covered by the metrics.
 
@@ -123,6 +129,7 @@ If the since parameter is included, any value collected before that time will be
 GET /metrics/info
 ```
 This endpoint returns general information about the server hardware, OS, uptime, etc. They are separate from the metrics because they seldom change and are not performance related. The data is a JSON object, as follows:
+
 * host: the name of the server running this service.
 * timestamp: the time of the request/response.
 * info.arch: the name of the processor architecture (not the processor model).
