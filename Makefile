@@ -16,10 +16,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA  02110-1301, USA.
+#
+# WARNING
+#
+# This Makefile depends on echttp and houseportal (dev) being installed.
+
+prefix=/usr/local
+SHARE=$(prefix)/share/house
+
+INSTALL=/usr/bin/install
 
 HAPP=houselinux
-HROOT=/usr/local
-SHARE=$(HROOT)/share/house
 
 # Application build. --------------------------------------------
 
@@ -44,35 +51,27 @@ rebuild: clean all
 	gcc -c -Wall -g -O -o $@ $<
 
 houselinux: $(OBJS)
-	gcc -g -O -o houselinux $(OBJS) -lhouseportal -lechttp -lssl -lcrypto -lrt
+	gcc -g -O -o houselinux $(OBJS) -lhouseportal -lechttp -lssl -lcrypto -lmagic -lrt
 
 # Distribution agnostic file installation -----------------------
 
-install-ui:
-	mkdir -p $(SHARE)/public/metrics
-	chmod 755 $(SHARE) $(SHARE)/public $(SHARE)/public/metrics
-	cp public/* $(SHARE)/public/metrics
-	chown root:root $(SHARE)/public/metrics/*
-	chmod 644 $(SHARE)/public/metrics/*
+install-ui: install-preamble
+	$(INSTALL) -m 0755 -d $(DESTDIR)$(SHARE)/public/metrics
+	$(INSTALL) -m 0644 public/* $(DESTDIR)$(SHARE)/public/metrics
 
 install-app: install-ui
-	mkdir -p $(HROOT)/bin
-	mkdir -p /var/lib/house
-	mkdir -p /etc/house
-	rm -f $(HROOT)/bin/houselinux
-	cp houselinux $(HROOT)/bin
-	chown root:root $(HROOT)/bin/houselinux
-	chmod 755 $(HROOT)/bin/houselinux
-	touch /etc/default/houselinux
+	$(INSTALL) -m 0755 -s houselinux $(DESTDIR)$(prefix)/bin
+	touch $(DESTDIR)/etc/default/houselinux
 
 uninstall-app:
-	rm -f $(HROOT)/bin/houselinux
-	rm -f $(SHARE)/public/metrics
+	rm -f $(DESTDIR)$(prefix)/bin/houselinux
+	rm -f $(DESTDIR)$(SHARE)/public/metrics
 
 purge-app:
 
 purge-config:
-	rm -rf /etc/house/linux.config /etc/default/houselinux
+	rm -rf $(DESTDIR)/etc/house/linux.config
+	rm -rf $(DESTDIR)/etc/default/houselinux
 
 # System installation. ------------------------------------------
 
