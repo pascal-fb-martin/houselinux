@@ -1,0 +1,17 @@
+Source: houselinux
+Version: 1.0
+Section: Web servers
+Maintainer: Pascal Martin <pascal.fb.martin@gmail.com>
+Priority: optional
+Homepage: https://github.com/pascal-fb-martin/houselinux
+Standard-Version: 4.7.0
+Package: houselinux
+Architecture: {{arch}}
+Depends: 
+Description: A House service to collect and report OS metrics.
+ HouseLinux is part of the House suite of web services.
+ .
+ HouseLinux collects OS metrics such as CPU and RAM usage, network and disk
+ traffic, CPU and GPU temperatures, etc. It reports these metrics to any
+ running House event aggregation services and publish them on its own web API.
+
