@@ -1,4 +1,5 @@
 # HouseLinux
+
 The House service to log Linux performance metrics.
 
 ## Overview
@@ -66,6 +67,7 @@ Adding quartiles (min, 25% percentile, median, 75% percentile, max) would give a
 ```
 GET /metrics/status
 ```
+
 This endpoint returns a complete set of metrics, as a JSON object defined as follows:
 
 * host: the name of the server running this service.
@@ -128,6 +130,7 @@ If the since parameter is included, any value collected before that time will be
 ```
 GET /metrics/info
 ```
+
 This endpoint returns general information about the server hardware, OS, uptime, etc. They are separate from the metrics because they seldom change and are not performance related. The data is a JSON object, as follows:
 
 * host: the name of the server running this service.
@@ -152,6 +155,7 @@ The provided Makefile supports building private Debian packages. These are _not_
   no source package.
 
 To build a Debian package, use the `debian-package` target:
+
 ```
 make debian-package
 ```
