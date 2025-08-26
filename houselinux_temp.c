@@ -53,6 +53,8 @@
 #include "houselinux_reduce.h"
 #include "houselinux_temp.h"
 
+#include "houselog_sensor.h"
+
 #define HOUSE_TEMP_PERIOD  5 // Sample temperature metrics every 5 seconds.
 #define HOUSE_TEMP_SPAN   60 // MUST KEEP A 5 MINUTES HISTORY.
 
@@ -192,16 +194,55 @@ static void houselinux_temp_read (const char *path, long long *item) {
 void houselinux_temp_background (time_t now) {
 
     static time_t NextTempCollect = 0;
+    static time_t NextTempRecord = 0;
+    static char LocalHost[256] = {0};
 
-    if (now < NextTempCollect) return;
-    NextTempCollect = now + HOUSE_TEMP_PERIOD;
+    if (now >= NextTempCollect) {
 
-    int index = (now / HOUSE_TEMP_PERIOD) % HOUSE_TEMP_SPAN;
+        NextTempCollect = now + HOUSE_TEMP_PERIOD;
+        int index = (now / HOUSE_TEMP_PERIOD) % HOUSE_TEMP_SPAN;
 
-    if (HouseTempCpuPath[0])
-        houselinux_temp_read (HouseTempCpuPath, HouseTempLatest.cpu + index);
-    if (HouseTempGpuPath[0])
-        houselinux_temp_read (HouseTempGpuPath, HouseTempLatest.gpu + index);
-    HouseTempLatest.timestamp[index] = now;
+        if (HouseTempCpuPath[0])
+            houselinux_temp_read (HouseTempCpuPath, HouseTempLatest.cpu + index);
+        if (HouseTempGpuPath[0])
+            houselinux_temp_read (HouseTempGpuPath, HouseTempLatest.gpu + index);
+        HouseTempLatest.timestamp[index] = now;
+    }
+
+    // Record the CPU temperature's average value as sensor data.
+    // This is to plug in with any application consoming sensor data.
+
+    if (!NextTempRecord) {
+        houselog_sensor_initialize ("metrics", 0, 0);
+        gethostname (LocalHost, sizeof(LocalHost));
+        int collectioninterval = HOUSE_TEMP_PERIOD * HOUSE_TEMP_SPAN;
+        NextTempRecord = now + collectioninterval;
+
+        // Record data at multiple of the collection interval.
+        if (NextTempRecord % collectioninterval) {
+           NextTempRecord -= NextTempRecord % collectioninterval;
+           NextTempRecord += collectioninterval;
+        }
+    }
+
+    if (now >= NextTempRecord) {
+
+        NextTempRecord = now + (HOUSE_TEMP_PERIOD * HOUSE_TEMP_SPAN);
+
+        struct timeval timestamp;
+        timestamp.tv_sec = now;
+        timestamp.tv_usec = 0;
+
+        int i;
+        long long total = 0;
+        for (i = HOUSE_TEMP_SPAN - 1; i >= 0; --i)
+            total += HouseTempLatest.cpu[i];
+        long long average = total / (1000 * HOUSE_TEMP_SPAN);
+
+        houselog_sensor_numeric
+            (&timestamp, LocalHost, "temp.cpu", average, "°C");
+        houselog_sensor_flush ();
+    }
+    houselog_sensor_background (now);
 }
 
