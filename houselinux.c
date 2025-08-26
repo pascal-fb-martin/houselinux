@@ -100,6 +100,17 @@ static const char *houselinux_status (const char *method, const char *uri,
     int cursor;
     time_t now = time(0);
 
+    // Cache the most recent result for 10 seconds to avoid the cost
+    // of recalculating when there are multiple clients.
+    // This does not apply to periodic recalculation, as this is
+    // the reference for recording metrics.
+    static time_t generated = 0;
+    if (uri && ((now - generated) < 10)) {
+        echttp_content_type_json ();
+        return buffer;
+    }
+    generated = now;
+
     cursor = snprintf (buffer, sizeof(buffer),
                        "{\"host\":\"%s\","
                            "\"timestamp\":%lld,\"metrics\":{\"period\":300",
