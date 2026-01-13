@@ -59,6 +59,8 @@ houselinux: $(OBJS)
 install-ui: install-preamble
 	$(INSTALL) -m 0755 -d $(DESTDIR)$(SHARE)/public/metrics
 	$(INSTALL) -m 0644 public/* $(DESTDIR)$(SHARE)/public/metrics
+	$(INSTALL) -m 0755 -d $(DESTDIR)/var/lib/house/note/.$(HPKG)/gallery
+	$(INSTALL) -m 0644 gallery/* $(DESTDIR)/var/lib/house/note/.$(HPKG)/gallery
 
 install-runtime: install-preamble
 	$(INSTALL) -m 0755 -s houselinux $(DESTDIR)$(prefix)/bin
