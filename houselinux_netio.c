@@ -49,6 +49,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <echttp_libc.h>
+
 #include "houselog.h"
 #include "houselinux_reduce.h"
 #include "houselinux_netio.h"
@@ -85,8 +87,8 @@ static int houselinux_netio_add (const char *device) {
             realloc (HouseNetIOLatest,
                      HouseNetIOLatestSize*sizeof(struct HouseNetIOMetrics));
     }
-    snprintf (HouseNetIOLatest[HouseNetIOLatestCount].device,
-              sizeof(HouseNetIOLatest[0].device), "%s", device);
+    strtcpy (HouseNetIOLatest[HouseNetIOLatestCount].device,
+             device, sizeof(HouseNetIOLatest[0].device));
 
     return HouseNetIOLatestCount++;
 }

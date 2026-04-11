@@ -45,6 +45,7 @@
 #include "echttp.h"
 #include "echttp_cors.h"
 #include "echttp_static.h"
+#include "echttp_libc.h"
 
 #include "houseportalclient.h"
 #include "housediscover.h"
@@ -167,6 +168,7 @@ static const char *houselinux_details (const char *method, const char *uri,
 
 static const char *houselinux_osrelease (void) {
 
+    static const char HouseOsReleaseFile[] = "/etc/os-release";
     static char HouseOsRelease[128] = {0};
     static time_t NextRead = 0;
 
@@ -177,7 +179,21 @@ static const char *houselinux_osrelease (void) {
     }
     NextRead = now + 60;
 
-    FILE *f = fopen ("/etc/os-release", "r");
+    // Don't read the file again if it did not change. (It rarely does.)
+    struct stat filestat;
+    if (stat (HouseOsReleaseFile, &filestat)) {
+       static time_t LastModifDate = 0;
+       static time_t LastCreateDate = 0;
+       static time_t LastFileSize = 0;
+       if ((LastModifDate == filestat.st_mtime) &&
+           (LastCreateDate == filestat.st_ctime) &&
+           (LastFileSize == filestat.st_size)) return HouseOsRelease;
+       LastModifDate = filestat.st_mtime;
+       LastCreateDate = filestat.st_ctime;
+       LastFileSize = filestat.st_size;
+    }
+
+    FILE *f = fopen (HouseOsReleaseFile, "r");
     if (!f) return HouseOsRelease;
 
     char buffer[512];
@@ -198,9 +214,7 @@ static const char *houselinux_osrelease (void) {
             char *end = strrchr (eq, '"');
             if (end) *end = 0;
         }
-        if (strcmp (HouseOsRelease, eq)) {
-            snprintf (HouseOsRelease, sizeof(HouseOsRelease), "%s", eq);
-        }
+        strtcpy (HouseOsRelease, eq, sizeof(HouseOsRelease));
         break; // Found all that was needed.
     }
     fclose (f);

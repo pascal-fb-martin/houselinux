@@ -49,6 +49,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <echttp_libc.h>
+
 #include "houselog.h"
 #include "houselinux_reduce.h"
 #include "houselinux_diskio.h"
@@ -92,8 +94,8 @@ static int houselinux_diskio_add (int minor, int major, const char *device) {
     }
     HouseDiskIOLatest[HouseDiskIOLatestCount].major = major;
     HouseDiskIOLatest[HouseDiskIOLatestCount].minor = minor;
-    snprintf (HouseDiskIOLatest[HouseDiskIOLatestCount].device,
-              sizeof(HouseDiskIOLatest[0].device), "%s", device);
+    strtcpy (HouseDiskIOLatest[HouseDiskIOLatestCount].device,
+             device, sizeof(HouseDiskIOLatest[0].device));
 
     return HouseDiskIOLatestCount++;
 }
