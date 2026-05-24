@@ -272,17 +272,18 @@ window.onload = function() {
 <title>Metrics</title>
 </head>
 <body>
-   <header>
+   <nav>
    <table>
    <tr>
    <td><span>Status</span></td>
    <td><a href="/metrics/events.html">Events</a></td>
    </tr>
    </table>
-   </header>
-   <section>
+   </nav>
+   <main>
+   <article>
    <center>
-   <p>
+   <section>
    <h1>System Information</h1>
    <table class="housewidetable sysinfo" border="0">
       <tr>
@@ -294,9 +295,8 @@ window.onload = function() {
          <th width="25%">KERNEL</th>
       </tr>
    </table>
-   </p>
-   <br>
-   <p>
+   </section>
+   <section>
    <h1>CPU</h1>
    <table class="housewidetable cpu" border="0">
       <tr>
@@ -306,9 +306,8 @@ window.onload = function() {
          <th width="25%">STEAL</th>
       </tr>
    </table>
-   </p>
-   <br>
-   <p>
+   </section>
+   <section>
    <h1>Memory</h1>
    <table class="housewidetable memory" border="0">
       <tr>
@@ -320,9 +319,8 @@ window.onload = function() {
          <th width="20%">SWAPPED</th>
       </tr>
    </table>
-   </p>
-   <br>
-   <p>
+   </section>
+   <section>
    <h1>Storage</h1>
    <table class="housewidetable storage" border="0">
       <tr>
@@ -332,9 +330,8 @@ window.onload = function() {
          <th width="20%">AVAILABLE</th>
       </tr>
    </table>
-   </p>
-   <br>
-   <p>
+   </section>
+   <section>
    <h1>Disk I/O</h1>
    <table class="housewidetable diskio" border="0">
       <tr>
@@ -345,9 +342,8 @@ window.onload = function() {
          <th width="15%">LATENCY</th>
       </tr>
    </table>
-   </p>
-   <br>
-   <p>
+   </section>
+   <section>
    <h1>Network I/O</h1>
    <table class="housewidetable netio" border="0">
       <tr>
@@ -356,9 +352,8 @@ window.onload = function() {
          <th width="30%">TRANSMIT</th>
       </tr>
    </table>
-   </p>
-   <br>
-   <p>
+   </section>
+   <section>
    <h1>Temperatures</h1>
    <table class="housewidetable temperatures" border="0">
       <tr>
@@ -366,9 +361,10 @@ window.onload = function() {
          <th width="50%">GPU</th>
       </tr>
    </table>
-   </p>
-   </center>
    </section>
+   </center>
+   </article>
+   </main>
 </body>
 </html>
 
